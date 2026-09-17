@@ -3,40 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<meta name="theme-color" content="#f3f5f6">
-<title>Job Application Command Centre</title>
-<meta name="description" content="Private-in-browser job application analytics from an uploaded Excel register.">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Mono:wght@300;400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#f4f6f7">
+<title>Jobs</title>
+<meta name="description" content="Personal job application tracker from a local Excel workbook.">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Mono:wght@400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./landing.css">
 </head>
 <body>
 <section class="landing" id="landing" aria-labelledby="landingTitle">
-  <div class="landing-wrap">
-    <div class="landing-brand"><span class="brand-mark" aria-hidden="true"></span><span>Job Application Command Centre</span></div>
-    <div class="upload-card" id="dropZone" role="button" tabindex="0" aria-label="Upload Excel job application register">
-      <div class="upload-icon" aria-hidden="true">↥</div>
-      <p class="landing-kicker">Personal application tracker</p>
-      <h1 id="landingTitle">Drop your application register here</h1>
-      <p class="landing-copy">Upload the latest <strong>.xlsx</strong> or <strong>.xls</strong> export. The workbook is read in your browser and is not uploaded by this dashboard.</p>
-      <label class="upload-button" for="landingFileInput">Choose Excel file</label>
+  <div class="landing-panel">
+    <h1 id="landingTitle">Job tracker</h1>
+    <p>Load the latest Excel register to open the dashboard.</p>
+    <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Upload Excel job application register">
+      <svg class="upload-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <strong>Drop .xlsx here</strong>
+      <span>or</span>
+      <label class="upload-button" for="landingFileInput">Choose file</label>
       <input id="landingFileInput" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
-      <p class="upload-hint">Expected columns include Company, Role, Status and Applied date.</p>
-      <div class="upload-status" id="uploadStatus" aria-live="polite"></div>
     </div>
-    <p class="privacy-note">Local processing only. Refreshing the page clears the loaded workbook from the dashboard.</p>
+    <div class="upload-status" id="uploadStatus" aria-live="polite"></div>
+    <p class="landing-note">The workbook stays in this browser session.</p>
   </div>
 </section>
 
 <div class="shell is-hidden" id="dashboardShell">
   <header class="header">
-    <div class="brand"><div class="brand-mark"></div><div><h1>Job Application Command Centre</h1><p>Pipeline · deadlines · outcomes · application intelligence</p></div></div>
+    <div class="brand"><div><h1>Job tracker</h1><p>Applications · deadlines · outcomes</p></div></div>
     <div class="header-actions">
       <span class="source-pill" id="sourcePill"><i></i><span id="sourceLabel">No workbook loaded</span></span>
-      <label class="btn soft" for="fileInput">Load another workbook</label>
+      <label class="btn soft" for="fileInput">Replace workbook</label>
       <input id="fileInput" type="file" accept=".xlsx,.xls" hidden>
-      <button class="btn" id="themeBtn" type="button">Theme</button>
+      <button class="btn" id="themeBtn" type="button">Dark mode</button>
     </div>
   </header>
   <div class="app"><aside class="sidebar" id="sidebar"></aside><main class="main" id="main"></main></div>
