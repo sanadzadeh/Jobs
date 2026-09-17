@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Job Application Command Centre — Khaled Sanad</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Mono:wght@300;400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="shell"><header class="header"><div class="brand"><div class="brand-mark"></div><div><h1>Job Application Command Centre</h1><p>Personal pipeline · deadlines · outcomes · source integrity</p></div></div><div class="header-actions"><span class="source-pill" id="sourcePill"><i></i><span id="sourceLabel">Loading source…</span></span><button class="btn" id="refreshBtn">Refresh data</button><label class="btn soft" for="fileInput">Upload Excel</label><input id="fileInput" type="file" accept=".xlsx,.xls" hidden><button class="btn" id="themeBtn">Theme</button><a class="btn primary" href="https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit" target="_blank" rel="noopener">Open Google Sheet</a></div></header><div class="app"><aside class="sidebar" id="sidebar"></aside><main class="main" id="main"><div class="empty">Loading application register…</div></main></div></div>
+<div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="drawer"><div class="drawer-head"><div><h2 id="drawerTitle"></h2><p id="drawerSub"></p></div><button class="btn" id="drawerClose">Close</button></div><div class="drawer-body" id="drawerBody"></div></aside><div class="toast" id="toast"></div>
+<script src="./core.js"></script>
+<script src="./views.js"></script></body></html>
