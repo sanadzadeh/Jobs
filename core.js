@@ -5,7 +5,7 @@ const VIEWS=[['overview','Overview'],['pipeline','Pipeline'],['applications','Ap
 let state={rows:[],view:localStorage.getItem('jobDashView')||'overview',source:'',sheet:'',loadedAt:null,filter:'',status:'All',company:'All',hideClosed:true,sort:'recent'};
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2400)}
 function dateFrom(v){if(!v)return null;if(v instanceof Date&&!isNaN(v))return new Date(v);if(typeof v==='number'){const o=XLSX.SSF.parse_date_code(v);return o?new Date(o.y,o.m-1,o.d):null}const s=String(v).trim();const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);const d=new Date(s);return isNaN(d)?null:d}
 function fmtDate(v){const d=dateFrom(v);return d?d.toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'}):''}
 function daysUntil(v){const d=dateFrom(v);if(!d)return null;const a=new Date();a.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.ceil((d-a)/86400000)}
@@ -14,12 +14,10 @@ function statusClass(s){if(s==='Prepared')return'b-prepared';if(['Applied','Unde
 function statusBadge(s){return `<span class="badge ${statusClass(s)}">${esc(s||'Unknown')}</span>`}
 function shortStatus(s){return s==='Interview completed'?'Interview':s==='No outcome found'?'No outcome':s==='Recruitment cancelled'?'Cancelled':s}
 function validateExtension(file){return /\.(xlsx|xls)$/i.test(file.name)}
-
-function linkFor(r,h){
-  if(r._links?.[h])return r._links[h];
-  const v=String(r[h]||'').trim();
-  return /^https?:\/\//i.test(v)?v:'';
-}
+function cleanUrl(v){const s=String(v||'').trim();return /^https?:\/\//i.test(s)?s:''}
+function formulaUrl(f){const s=String(f||'');const m=s.match(/^HYPERLINK\(\s*"([^"]+)"/i);return m?cleanUrl(m[1].replace(/""/g,'"')):''}
+function cellLink(cell){return cleanUrl(cell?.l?.Target)||formulaUrl(cell?.f)||cleanUrl(cell?.v)||cleanUrl(cell?.w)}
+function linkFor(r,h){return cleanUrl(r._links?.[h])||cleanUrl(r[h])}
 function usefulLinks(r){return [['Application folder','Folder'],['Tailored CV','CV'],['Cover letter','Cover'],['Dashboard','Dashboard'],['Apply link','Apply'],['Confirmation email','Confirmation'],['Latest email','Latest email']].map(([h,l])=>[l,linkFor(r,h)]).filter(x=>x[1])}
 
 function parseWorkbook(buf,sourceLabel){
@@ -45,7 +43,8 @@ function parseWorkbook(buf,sourceLabel){
       if(!h)return;
       const c=range.s.c+i,cell=ws[XLSX.utils.encode_cell({r,c})];
       row[h]=cell?(cell.w??cell.v??''):'';
-      if(cell?.l?.Target)row._links[h]=cell.l.Target;
+      const url=cellLink(cell);
+      if(url)row._links[h]=url;
     });
     if(!String(row.Company||'').trim()&&!String(row.Role||'').trim())continue;
     rows.push(row);
@@ -59,14 +58,23 @@ function parseWorkbook(buf,sourceLabel){
 async function loadWorkbook(file){
   const status=document.getElementById('uploadStatus');
   if(!file)return;
-  if(!validateExtension(file)){status.textContent='Choose an .xlsx or .xls file.';status.className='upload-status error';return}
+  if(!validateExtension(file)){
+    const msg='Choose an .xlsx or .xls file.';
+    status.textContent=msg;status.className='upload-status error';
+    if(state.rows.length)toast(msg);
+    return;
+  }
   status.textContent=`Reading ${file.name}…`;status.className='upload-status working';
   try{
     const buf=await file.arrayBuffer();
     parseWorkbook(buf,file.name);
     status.textContent='';status.className='upload-status';
     toast(`${state.rows.length} applications loaded`);
-  }catch(err){status.textContent=err.message||'Could not read this workbook.';status.className='upload-status error'}
+  }catch(err){
+    const msg=err.message||'Could not read this workbook.';
+    status.textContent=msg;status.className='upload-status error';
+    if(state.rows.length)toast(msg);
+  }
 }
 
 function showDashboard(){
