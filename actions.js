@@ -1,39 +1,45 @@
+if(!VIEWS.some(v=>v[0]==='documents'))VIEWS.splice(5,0,['documents','CV & cover letters']);
+
+function documentRows(){return state.rows.filter(r=>String(r['CV text']||'').trim()||String(r['Cover letter text']||'').trim())}
+function wordCount(s){const x=String(s||'').trim();return x?x.split(/\s+/).length:0}
+function currentDocumentRow(){const rows=documentRows();if(!rows.length)return null;let r=rows.find(x=>x._row===state.docRow);if(!r){r=rows[0];state.docRow=r._row}return r}
+
 function applicationActions(r){
-  return [
-    ['Tailored CV','Copy CV','copy'],
-    ['Cover letter','Copy cover','copy'],
-    ['Dashboard','Dashboard','link'],
-    ['Apply link','Apply','link'],
-    ['Confirmation email','Confirmation','link'],
-    ['Latest email','Latest email','link']
-  ].map(([field,label,type])=>[label,linkFor(r,field),type]).filter(x=>x[1]);
+  const out=[];
+  if(String(r['CV text']||'').trim())out.push(['Copy CV','CV text','copy']);
+  if(String(r['Cover letter text']||'').trim())out.push(['Copy cover','Cover letter text','copy']);
+  const links=[['Tailored CV','Open CV'],['Cover letter','Open cover'],['Dashboard','Dashboard'],['Apply link','Apply'],['Confirmation email','Confirmation'],['Latest email','Latest email']];
+  links.forEach(([field,label])=>{const u=linkFor(r,field);if(u)out.push([label,u,'link'])});
+  return out;
 }
 
 function actionMarkup(r,limit){
   const items=applicationActions(r);
-  return (limit?items.slice(0,limit):items).map(([label,url,type])=>{
-    if(type==='copy') return `<a class="mini-link copy-link" href="#" data-copy-url="${esc(url)}" data-copy-label="${esc(label)}">${esc(label)}</a>`;
-    return `<a class="mini-link" href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`;
+  return (limit?items.slice(0,limit):items).map(([label,value,type])=>{
+    if(type==='copy')return `<a class="mini-link copy-link" href="#" data-copy-row="${r._row}" data-copy-field="${esc(value)}" data-copy-label="${esc(label)}">${esc(label)}</a>`;
+    return `<a class="mini-link" href="${esc(value)}" target="_blank" rel="noopener">${esc(label)}</a>`;
   }).join('');
 }
 
-async function copyAction(url,label){
-  try{
-    await navigator.clipboard.writeText(url);
-  }catch(err){
-    const t=document.createElement('textarea');
-    t.value=url;t.setAttribute('readonly','');t.style.position='fixed';t.style.opacity='0';
-    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();
-  }
+async function copyAction(text,label){
+  try{await navigator.clipboard.writeText(String(text||''))}
+  catch(err){const t=document.createElement('textarea');t.value=String(text||'');t.setAttribute('readonly','');t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}
   toast(`${label} copied`);
 }
 
 document.addEventListener('click',e=>{
-  const a=e.target.closest('[data-copy-url]');
-  if(!a)return;
+  const a=e.target.closest('[data-copy-row][data-copy-field]');if(!a)return;
   e.preventDefault();e.stopPropagation();
-  copyAction(a.dataset.copyUrl,a.dataset.copyLabel||'Link');
+  const r=state.rows.find(x=>x._row===+a.dataset.copyRow);if(!r)return;
+  copyAction(r[a.dataset.copyField]||'',a.dataset.copyLabel||'Text');
 });
+
+function cachePayload(){return {rows:state.rows,source:state.source,sheet:state.sheet,loadedAt:state.loadedAt?new Date(state.loadedAt).toISOString():null}}
+function persistCache(){try{localStorage.setItem('jobDashRegisterCache',JSON.stringify(cachePayload()))}catch(err){console.warn('Could not cache register',err)}}
+let cacheTimer=null;function persistCacheSoon(){clearTimeout(cacheTimer);cacheTimer=setTimeout(persistCache,250)}
+function restoreCache(){try{const raw=localStorage.getItem('jobDashRegisterCache');if(!raw)return false;const d=JSON.parse(raw);if(!Array.isArray(d.rows)||!d.rows.length)return false;state.rows=d.rows;state.source=d.source||'Cached register';state.sheet=d.sheet||CONFIG.sheetName;state.loadedAt=d.loadedAt?new Date(d.loadedAt):new Date();showDashboard();render();return true}catch(err){console.warn('Could not restore cached register',err);return false}}
+const parseWorkbookBase=parseWorkbook;
+parseWorkbook=function(buf,sourceLabel){parseWorkbookBase(buf,sourceLabel);persistCache()};
 
 openDrawer=function(rowNo){
   const r=state.rows.find(x=>x._row===rowNo);if(!r)return;
@@ -46,5 +52,26 @@ openDrawer=function(rowNo){
 
 appTable=function(){
   const rows=filteredRows();
-  return `${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Deadline</th><th>Job ID</th><th>Contact</th><th>Actions</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr data-open="${r._row}"><td>${statusBadge(r.Status)}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(r['Job ID']||'')}</td><td>${esc(r.Contact||'')}</td><td><div class="linkrow" onclick="event.stopPropagation()">${actionMarkup(r,5)}</div></td><td class="row-chevron">›</td></tr>`).join('')}</tbody></table>${rows.length?'':'<div class="empty">No applications match these filters.</div>'}</div><div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. Deadline sorting is the default.</div>`;
+  return `${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Deadline</th><th>Job ID</th><th>Contact</th><th>Actions</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr data-open="${r._row}"><td>${statusBadge(r.Status)}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(r['Job ID']||'')}</td><td>${esc(r.Contact||'')}</td><td><div class="linkrow" onclick="event.stopPropagation()">${actionMarkup(r,6)}</div></td><td class="row-chevron">›</td></tr>`).join('')}</tbody></table>${rows.length?'':'<div class="empty">No applications match these filters.</div>'}</div><div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. Deadline sorting is the default.</div>`;
 };
+
+function documents(){
+  const rows=documentRows(),r=currentDocumentRow();
+  if(!r)return `${pageHead('CV & cover letters','Review and edit the document text loaded with the register.')}<div class="card"><div class="empty">No CV or cover-letter text is present in this register.</div></div>`;
+  const cv=String(r['CV text']||''),cl=String(r['Cover letter text']||'');
+  return `${pageHead('CV & cover letters','Review, copy and edit the full text stored with each application.')}<div class="doc-toolbar"><select class="select doc-select" id="docSelect">${rows.map(x=>`<option value="${x._row}" ${x._row===r._row?'selected':''}>${esc(x.Company)} · ${esc(x.Role)}</option>`).join('')}</select><span class="badge b-neutral">${rows.length} applications with documents</span></div><div class="notice doc-note">Edits here are saved in this browser and immediately used by Copy CV / Copy cover. The Google Sheet remains the permanent source record.</div><section class="doc-grid"><article class="card doc-card"><div class="section-title"><div><h3>CV</h3><p><span id="cvWords">${wordCount(cv)}</span> words · <span id="cvChars">${cv.length}</span> characters</p></div><div class="linkrow"><a class="mini-link copy-link" href="#" data-copy-row="${r._row}" data-copy-field="CV text" data-copy-label="CV">Copy CV</a>${linkFor(r,'Tailored CV')?`<a class="mini-link" href="${esc(linkFor(r,'Tailored CV'))}" target="_blank" rel="noopener">Open original</a>`:''}</div></div><textarea class="doc-editor" id="cvEditor" spellcheck="true">${esc(cv)}</textarea></article><article class="card doc-card"><div class="section-title"><div><h3>Cover letter</h3><p><span id="clWords">${wordCount(cl)}</span> words · <span id="clChars">${cl.length}</span> characters</p></div><div class="linkrow"><a class="mini-link copy-link" href="#" data-copy-row="${r._row}" data-copy-field="Cover letter text" data-copy-label="Cover letter">Copy cover</a>${linkFor(r,'Cover letter')?`<a class="mini-link" href="${esc(linkFor(r,'Cover letter'))}" target="_blank" rel="noopener">Open original</a>`:''}</div></div><textarea class="doc-editor" id="clEditor" spellcheck="true">${esc(cl)}</textarea></article></section>`;
+}
+
+const attachViewEventsBase=attachViewEvents;
+attachViewEvents=function(){
+  attachViewEventsBase();
+  const ds=document.getElementById('docSelect');if(ds)ds.onchange=e=>{state.docRow=+e.target.value;render()};
+  const cv=document.getElementById('cvEditor');if(cv)cv.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['CV text']=e.target.value;document.getElementById('cvWords').textContent=wordCount(e.target.value);document.getElementById('cvChars').textContent=e.target.value.length;persistCacheSoon()};
+  const cl=document.getElementById('clEditor');if(cl)cl.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['Cover letter text']=e.target.value;document.getElementById('clWords').textContent=wordCount(e.target.value);document.getElementById('clChars').textContent=e.target.value.length;persistCacheSoon()};
+};
+
+renderSidebar=function(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,analytics:'',documents:documentRows().length,quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Views</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">0${i+1}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<a class="nav sidebar-link" href="https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit" target="_blank" rel="noopener"><span class="nav-num">↗</span><span class="nav-label">Google Sheet</span></a><div class="side-meta">${sourceInfo()}</div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()})};
+
+render=function(){if(!state.rows.length)return;renderSidebar();const views={overview,pipeline,applications,deadlines,analytics,documents,quality};document.getElementById('main').innerHTML=(views[state.view]||overview)();attachViewEvents()};
+
+restoreCache();
