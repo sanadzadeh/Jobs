@@ -1,0 +1,106 @@
+KHALED SANAD
+Analytics enablement | Commercial insights | Data products and decision support
+
+Sydney, NSW | 0412 700 786 | k.sanad@gmail.com | linkedin.com/in/sanad
+sanadzadeh.github.io/Portfolio
+
+PROFESSIONAL SUMMARY
+
+Senior analytics and strategy professional with seven years at NAB across enterprise transformation, intelligence, financial crime and operational analytics. Experienced in turning fragmented, high-volume data into reliable insight products, dashboards, scenario tools and decision-ready recommendations for senior stakeholders.
+
+Current work focuses on building in-house analytical solutions that improve planning, reporting and decision-making across complex technology portfolios. I combine SQL, Python, Power BI, DAX, Power Query and advanced Excel with data modelling, validation and stakeholder engagement to solve operational problems, reduce manual effort and translate analysis into practical business action.
+
+CORE SKILLS
+
+• Advanced analytics, data wrangling and multi-source integration
+• SQL, Python, Power BI, DAX, Power Query and advanced Excel
+• Dashboard and visualisation development
+• Commercial and operational decision support
+• Scenario analysis, forecasting and statistical reasoning
+• Customer, behavioural and transaction data analysis
+• KPI design, performance measurement and trend analysis
+• Dimensional modelling, star schemas and semantic models
+• Data quality, reconciliation, validation and governance
+• Stakeholder discovery, requirements gathering and solution design
+• Executive storytelling and recommendation development
+• GitHub, version control and AI-assisted analytical development
+
+PROFESSIONAL EXPERIENCE
+
+Senior Consultant – Strategic Planning & Roadmaps
+National Australia Bank | Transformation | 2025–present
+
+Build analytical products and decision-support tools that help senior stakeholders understand performance, test options, identify risks and make investment and delivery decisions across enterprise technology transformation.
+
+• Integrate portfolio, delivery, cost and stakeholder-maintained data from Clarity, Rally, Excel and other sources into governed analytical models and reporting products.
+• Develop Power BI dashboards, semantic models and visual reporting that turn complex portfolio data into clear performance trends, exceptions and actionable insights.
+• Build scenario and forecasting tools that allow stakeholders to test assumptions, compare options and understand how changes in delivery velocity, dependencies and investment choices affect outcomes.
+• Replace manual reporting and repetitive analysis with repeatable in-house solutions using Power Query, DAX, Excel, SQL, Python and browser-based tools.
+• Conduct detailed data wrangling, cleansing, reconciliation and validation across incomplete or inconsistent source data before outputs are used for executive decision-making.
+• Design business rules, measures, validation controls and source-to-output checks so reporting remains reliable and traceable.
+• Work directly with stakeholders to understand operational pain points, convert ambiguous questions into analytical requirements and develop practical tools that improve ways of working.
+• Translate complex analysis into concise narratives, recommendations and executive materials that explain what is changing, why it matters and what action should be considered.
+• Build weighted models and structured analytical logic to support technology modernisation, prioritisation and portfolio investment decisions.
+• Use GitHub and AI-assisted development tools including ChatGPT, Claude, Microsoft Copilot and Cursor to accelerate coding, analysis, prototyping and documentation while retaining human review and governance.
+
+Senior Associate – Intelligence
+National Australia Bank | Financial Crime Risk Mitigation | 2023–2025
+
+Produced strategic and operational intelligence by combining customer, transaction, product, behavioural and external data into evidence-based findings and recommendations.
+
+• Produced more than 100 intelligence assessments identifying trends, anomalies, emerging behaviours, product exploitation and changes requiring strategic or operational response.
+• Used SQL, Python, Power BI and Excel to interrogate large datasets, test assumptions, automate recurring analysis and develop visual decision-support products.
+• Analysed customer and transaction behaviour across multiple data sources to identify material patterns, changes and drivers.
+• Combined quantitative analysis, qualitative evidence and stakeholder input into clear recommendations for senior and non-technical audiences.
+• Built repeatable dashboards and automated workflows that improved reporting consistency, reduced manual effort and made insights easier to consume.
+• Reconciled conflicting sources and documented assumptions, limitations, thresholds and analytical reasoning behind conclusions.
+• Presented findings to stakeholders and influenced decisions by clearly separating evidence, implications and recommended action.
+
+Senior Associate – Sanctions List Management
+National Australia Bank | Financial Crime Detection & Innovation | 2021–2023
+
+• Analysed screening, reference and customer data to identify matching, data-quality and control issues.
+• Designed and implemented automated analytical processes, including detection of sanctioned cryptocurrency wallets.
+• Translated regulatory requirements into business rules, data requirements and documented controls.
+• Investigated discrepancies across systems and worked with operations and technology teams to resolve them.
+• Validated source and rule changes after implementation and documented residual exceptions.
+
+Associate – Monitoring & Investigations
+National Australia Bank | Financial Crime Operations | 2019–2021
+
+• Analysed customer, transaction, alert and risk information across multiple systems to identify unusual activity and material risk indicators.
+• Reconciled complex evidence, assessed patterns and documented the analytical basis for recommendations and escalation.
+• Applied structured judgement, evidence standards and quality controls in a regulated operating environment.
+
+Trainer, Assessor and International Business Development Coordinator
+Vocational Education and Training sector | 2010–2019
+
+• Delivered training, stakeholder engagement and business-development activity across varied audiences.
+• Supported operational, compliance, financial and performance reporting for management.
+• Explained complex information clearly and developed strong facilitation, presentation and stakeholder-management capability.
+
+TECHNICAL SKILLS
+
+SQL | Python | Power BI | DAX | Power Query | Excel | data modelling | dimensional modelling | star schemas | dashboard development | statistical analysis | scenario modelling | forecasting | data wrangling | validation | reconciliation | GitHub | HTML | CSS | JavaScript | Rally | Clarity | MS Project | Microsoft 365 | ChatGPT | Claude | Microsoft Copilot | Cursor
+
+EDUCATION
+
+Bachelor of Science, Physics and Economics | Tehran, Iran | 2004
+Bachelor of Arts, Technology | University of Adelaide | 2009
+Graduate Diploma in Education | University of Adelaide | 2010
+
+SELECTED PROFESSIONAL DEVELOPMENT
+
+• AI Coding Agents with GitHub Copilot and Cursor | 2026
+• Accelerate Development with Artificial Intelligence | 2026
+• How to Build and Execute a Successful Data Strategy | 2025
+• Data Visualisation, Storytelling and Advanced Charts | 2025
+• Advanced DAX and SQL for Data Analysis | 2024
+• Microsoft Power BI Data Analyst Associate, PL-300 | 2024
+• Machine Learning, Stanford University and DeepLearning.AI | 2023
+• Generative AI with Large Language Models, DeepLearning.AI | 2023
+• Python for Data Science, AI and Development, IBM | 2023
+
+PORTFOLIO
+
+Please check my portfolio: sanadzadeh.github.io/Portfolio
