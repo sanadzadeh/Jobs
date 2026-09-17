@@ -1,0 +1,24 @@
+18 September 2026
+
+Hiring Manager
+ING Australia
+
+Dear Hiring Manager,
+
+I am applying for the Analytics Enablement Expert role at ING because it closely matches the way I work: combining data analysis, in-house tool development, visualisation and stakeholder engagement to solve business problems and improve decisions.
+
+In my current NAB transformation role, I integrate data from Clarity, Rally, Excel and stakeholder-maintained sources, clean and reconcile inconsistent inputs, and build Power BI models, dashboards, scenario tools and reporting products for senior decision-makers. A large part of the work is understanding the operational problem first, then designing an analytical solution that is practical, reliable and easy for stakeholders to use.
+
+I use SQL, Python, Power BI, DAX, Power Query and advanced Excel for data wrangling, modelling, analysis and automation. I have replaced manual reporting with repeatable tools, built validation and source-to-output controls, and developed forecasting and scenario models that help stakeholders compare options and decide where intervention or investment is required. I also use GitHub and AI-assisted development tools to accelerate prototyping, coding and documentation while maintaining review and governance.
+
+My earlier intelligence work adds a strong behavioural-analysis dimension. I analysed large customer, transaction and product datasets to identify patterns, anomalies and emerging behaviours, produced more than 100 strategic and operational intelligence assessments, and translated quantitative evidence into recommendations for senior and non-technical audiences. That experience strengthened my ability to move from complex data to a clear view of what is happening, why it matters and what action should follow.
+
+The strongest fit I bring is the combination of technical analytics, data storytelling, practical product development and commercial decision support. I am comfortable working with imperfect data, challenging assumptions, building tools for internal users and presenting evidence-based recommendations to stakeholders with different levels of technical understanding.
+
+Please check my portfolio: sanadzadeh.github.io/Portfolio
+
+Kind regards,
+
+Khaled Sanad
+0412 700 786
+k.sanad@gmail.com
