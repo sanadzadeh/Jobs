@@ -1,25 +1,32 @@
 const CONFIG={sheetName:'Applications'};
 const CLOSED=new Set(['Rejected','Role withdrawn','Recruitment cancelled','Ad closed']);
 const ACTIVE=new Set(['Applied','Under review','Interview completed','No outcome found','CV acknowledged','Talent pool / EOI']);
-const VIEWS=[['overview','Overview'],['pipeline','Pipeline'],['applications','Applications'],['deadlines','Deadlines'],['analytics','Analytics'],['quality','Data & quality']];
+const VIEWS=[['overview','Overview'],['pipeline','Pipeline'],['applications','Applications'],['deadlines','Deadlines'],['analytics','Analytics'],['quality','Data quality']];
 let state={rows:[],view:localStorage.getItem('jobDashView')||'overview',source:'',sheet:'',loadedAt:null,filter:'',status:'All',company:'All',hideClosed:true,sort:'recent'};
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function dateFrom(v){if(!v)return null;if(v instanceof Date&&!isNaN(v))return new Date(v);if(typeof v==='number'){const o=XLSX.SSF.parse_date_code(v);return o?new Date(o.y,o.m-1,o.d):null}const s=String(v).trim();const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);const d=new Date(s);return isNaN(d)?null:d}
 function fmtDate(v){const d=dateFrom(v);return d?d.toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'}):''}
 function daysUntil(v){const d=dateFrom(v);if(!d)return null;const a=new Date();a.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.ceil((d-a)/86400000)}
 function keyNorm(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ')}
-function statusClass(s){if(s==='Prepared')return'b-prepared';if(s==='Applied')return'b-applied';if(s==='Under review')return'b-review';if(s==='Interview completed')return'b-interview';if(s==='Rejected')return'b-risk';if(['Talent pool / EOI','CV acknowledged'].includes(s))return'b-good';if(s==='No outcome found')return'b-warn';return'b-neutral'}
+function statusClass(s){if(s==='Prepared')return'b-prepared';if(['Applied','Under review'].includes(s))return'b-active';if(['Interview completed','Talent pool / EOI','CV acknowledged'].includes(s))return'b-good';if(s==='No outcome found')return'b-warn';if(CLOSED.has(s))return'b-closed';return'b-neutral'}
 function statusBadge(s){return `<span class="badge ${statusClass(s)}">${esc(s||'Unknown')}</span>`}
 function shortStatus(s){return s==='Interview completed'?'Interview':s==='No outcome found'?'No outcome':s==='Recruitment cancelled'?'Cancelled':s}
-
 function validateExtension(file){return /\.(xlsx|xls)$/i.test(file.name)}
+
+function linkFor(r,h){
+  if(r._links?.[h])return r._links[h];
+  const v=String(r[h]||'').trim();
+  return /^https?:\/\//i.test(v)?v:'';
+}
+function usefulLinks(r){return [['Application folder','Folder'],['Tailored CV','CV'],['Cover letter','Cover'],['Dashboard','Dashboard'],['Apply link','Apply'],['Confirmation email','Confirmation'],['Latest email','Latest email']].map(([h,l])=>[l,linkFor(r,h)]).filter(x=>x[1])}
+
 function parseWorkbook(buf,sourceLabel){
   const wb=XLSX.read(buf,{type:'array',cellDates:true,cellNF:true,cellText:true});
   const name=wb.SheetNames.includes(CONFIG.sheetName)?CONFIG.sheetName:wb.SheetNames[0];
   const ws=wb.Sheets[name];
-  if(!ws||!ws['!ref'])throw new Error('The workbook contains no readable worksheet data.');
+  if(!ws||!ws['!ref'])throw new Error('No readable worksheet data found.');
   const range=XLSX.utils.decode_range(ws['!ref']);
   let headerRow=-1,headers=[];
   for(let r=range.s.r;r<=Math.min(range.e.r,25);r++){
@@ -30,7 +37,7 @@ function parseWorkbook(buf,sourceLabel){
     }
     if(vals.includes('Applied date')&&vals.includes('Company')&&vals.includes('Role')&&vals.includes('Status')){headerRow=r;headers=vals;break}
   }
-  if(headerRow<0)throw new Error('I could not find the register headers. Expected at least Applied date, Company, Role and Status.');
+  if(headerRow<0)throw new Error('Could not find the application table headers.');
   const rows=[];
   for(let r=headerRow+1;r<=range.e.r;r++){
     const row={_row:r+1,_links:{}};
@@ -44,68 +51,51 @@ function parseWorkbook(buf,sourceLabel){
     rows.push(row);
   }
   if(!rows.length)throw new Error('The register was found, but it contains no application rows.');
-  state.rows=rows;
-  state.source=sourceLabel;
-  state.sheet=name;
-  state.loadedAt=new Date();
+  state.rows=rows;state.source=sourceLabel;state.sheet=name;state.loadedAt=new Date();
   state.filter='';state.status='All';state.company='All';state.hideClosed=true;state.sort='recent';
-  showDashboard();
-  render();
+  showDashboard();render();
 }
 
 async function loadWorkbook(file){
   const status=document.getElementById('uploadStatus');
   if(!file)return;
-  if(!validateExtension(file)){status.textContent='Please choose an .xlsx or .xls file.';status.className='upload-status error';return}
+  if(!validateExtension(file)){status.textContent='Choose an .xlsx or .xls file.';status.className='upload-status error';return}
   status.textContent=`Reading ${file.name}…`;status.className='upload-status working';
   try{
     const buf=await file.arrayBuffer();
     parseWorkbook(buf,file.name);
     status.textContent='';status.className='upload-status';
     toast(`${state.rows.length} applications loaded`);
-  }catch(err){
-    status.textContent=err.message||'Could not read this workbook.';status.className='upload-status error';
-  }
+  }catch(err){status.textContent=err.message||'Could not read this workbook.';status.className='upload-status error'}
 }
 
 function showDashboard(){
   document.getElementById('landing').classList.add('is-hidden');
   document.getElementById('dashboardShell').classList.remove('is-hidden');
   document.getElementById('sourceLabel').textContent=state.source;
-  document.getElementById('sourcePill').classList.add('manual');
   window.scrollTo({top:0,behavior:'instant'});
 }
-function showLanding(){
-  state.rows=[];state.source='';state.sheet='';state.loadedAt=null;
-  document.getElementById('dashboardShell').classList.add('is-hidden');
-  document.getElementById('landing').classList.remove('is-hidden');
-}
-
-function linkFor(r,h){return r._links?.[h]||''}
-function usefulLinks(r){return [['Application folder','Folder'],['Tailored CV','CV'],['Cover letter','Cover'],['Dashboard','Dashboard'],['Apply link','Apply'],['Confirmation email','Confirmation'],['Latest email','Latest email']].map(([h,l])=>[l,linkFor(r,h)]).filter(x=>x[1])}
+function showLanding(){state.rows=[];state.source='';state.sheet='';state.loadedAt=null;document.getElementById('dashboardShell').classList.add('is-hidden');document.getElementById('landing').classList.remove('is-hidden')}
 function companies(rows=state.rows){return [...new Set(rows.map(r=>r.Company).filter(Boolean))].sort((a,b)=>a.localeCompare(b))}
 function filteredRows(){const q=keyNorm(state.filter);let x=state.rows.filter(r=>{if(state.hideClosed&&CLOSED.has(r.Status))return false;if(state.status!=='All'&&r.Status!==state.status)return false;if(state.company!=='All'&&r.Company!==state.company)return false;if(q&&!keyNorm([r.Company,r.Role,r['Job ID'],r.Status,r.Contact,r.Notes].join(' ')).includes(q))return false;return true});if(state.sort==='company')x.sort((a,b)=>String(a.Company).localeCompare(String(b.Company)));else if(state.sort==='deadline')x.sort((a,b)=>(dateFrom(a.Deadline)||new Date(8640000000000000))-(dateFrom(b.Deadline)||new Date(8640000000000000)));else x.sort((a,b)=>(dateFrom(b['Applied date'])||dateFrom(b['Last update'])||0)-(dateFrom(a['Applied date'])||dateFrom(a['Last update'])||0));return x}
 function counts(){const c={total:state.rows.length,prepared:0,active:0,interviews:0,rejected:0};state.rows.forEach(r=>{if(r.Status==='Prepared')c.prepared++;if(ACTIVE.has(r.Status))c.active++;if(r.Status==='Interview completed')c.interviews++;if(r.Status==='Rejected')c.rejected++});return c}
-function sourceInfo(){const c=counts();return `<strong>${esc(state.source||'No workbook')}</strong>${state.loadedAt?`Loaded ${state.loadedAt.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'})}`:''}<br>${c.total} application records · sheet: ${esc(state.sheet||'—')}`}
-function renderSidebar(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,analytics:'',quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Workspace</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">0${i+1}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<div class="side-meta">${sourceInfo()}<button class="side-reload" id="sideReload" type="button">Load another workbook</button></div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()});document.getElementById('sideReload')?.addEventListener('click',()=>document.getElementById('fileInput').click())}
-function openDrawer(rowNo){const r=state.rows.find(x=>x._row===rowNo);if(!r)return;document.getElementById('drawerTitle').textContent=r.Role||'Application';document.getElementById('drawerSub').textContent=[r.Company,r['Job ID']].filter(Boolean).join(' · ');const detail=[['Status',statusBadge(r.Status)],['Applied date',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Contact',esc(r.Contact||'—')],['Contact email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}" style="color:var(--accent)">${esc(r['Contact email'])}</a>`:'—']];document.getElementById('drawerBody').innerHTML=`<div class="detail-grid">${detail.map(([l,v])=>`<div class="detail"><label>${l}</label><div>${v}</div></div>`).join('')}</div><div class="drawer-links">${usefulLinks(r).map(([l,u])=>`<a class="btn soft" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`).join('')}</div><div class="eyebrow">Notes</div><div class="notes">${esc(r.Notes||'No notes recorded.')}</div>`;document.getElementById('drawer').classList.add('open');document.getElementById('drawerBackdrop').classList.add('open')}
+function sourceInfo(){const c=counts();return `<strong>${esc(state.source||'No workbook')}</strong>${state.loadedAt?`Loaded ${state.loadedAt.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'})}`:''}<br>${c.total} records · ${esc(state.sheet||'—')}`}
+function renderSidebar(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,analytics:'',quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Views</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">0${i+1}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<div class="side-meta">${sourceInfo()}</div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()})}
+function openDrawer(rowNo){const r=state.rows.find(x=>x._row===rowNo);if(!r)return;document.getElementById('drawerTitle').textContent=r.Role||'Application';document.getElementById('drawerSub').textContent=[r.Company,r['Job ID']].filter(Boolean).join(' · ');const detail=[['Status',statusBadge(r.Status)],['Applied',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Contact',esc(r.Contact||'—')],['Email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}">${esc(r['Contact email'])}</a>`:'—']];document.getElementById('drawerBody').innerHTML=`<div class="detail-grid">${detail.map(([l,v])=>`<div class="detail"><label>${l}</label><div>${v}</div></div>`).join('')}</div><div class="drawer-links">${usefulLinks(r).map(([l,u])=>`<a class="mini-link action-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`).join('')}</div><div class="eyebrow">Notes</div><div class="notes">${esc(r.Notes||'No notes recorded.')}</div>`;document.getElementById('drawer').classList.add('open');document.getElementById('drawerBackdrop').classList.add('open')}
 function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerBackdrop').classList.remove('open')}
 function exportCsv(){const rows=filteredRows(),cols=['Applied date','Company','Role','Job ID','Status','Last update','Contact','Contact email','Deadline','Notes'];const q=v=>`"${String(v??'').replace(/"/g,'""')}"`,csv=[cols.map(q).join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='job-applications-filtered.csv';a.click();URL.revokeObjectURL(a.href)}
 
-const landingInput=document.getElementById('landingFileInput');
-const headerInput=document.getElementById('fileInput');
+const landingInput=document.getElementById('landingFileInput'),headerInput=document.getElementById('fileInput'),dz=document.getElementById('dropZone');
 landingInput.addEventListener('change',e=>{loadWorkbook(e.target.files?.[0]);e.target.value=''});
 headerInput.addEventListener('change',e=>{loadWorkbook(e.target.files?.[0]);e.target.value=''});
-const dz=document.getElementById('dropZone');
 ['dragenter','dragover'].forEach(type=>dz.addEventListener(type,e=>{e.preventDefault();e.stopPropagation();dz.classList.add('dragging')}));
 ['dragleave','drop'].forEach(type=>dz.addEventListener(type,e=>{e.preventDefault();e.stopPropagation();dz.classList.remove('dragging')}));
 dz.addEventListener('drop',e=>loadWorkbook(e.dataTransfer?.files?.[0]));
 dz.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();landingInput.click()}});
 dz.addEventListener('click',e=>{if(e.target.closest('label'))return;landingInput.click()});
-
-document.getElementById('drawerClose').onclick=closeDrawer;
-document.getElementById('drawerBackdrop').onclick=closeDrawer;
+document.getElementById('drawerClose').onclick=closeDrawer;document.getElementById('drawerBackdrop').onclick=closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();if(state.rows.length&&e.key==='/'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){e.preventDefault();state.view='applications';render();setTimeout(()=>document.getElementById('appSearch')?.focus(),20)}});
-document.documentElement.dataset.theme=localStorage.getItem('jobDashTheme')||'light';
-document.getElementById('themeBtn').onclick=()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;localStorage.setItem('jobDashTheme',n)};
+function updateThemeButton(){document.getElementById('themeBtn').textContent=document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode'}
+document.documentElement.dataset.theme=localStorage.getItem('jobDashTheme')||'light';updateThemeButton();
+document.getElementById('themeBtn').onclick=()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;localStorage.setItem('jobDashTheme',n);updateThemeButton()};
 showLanding();
