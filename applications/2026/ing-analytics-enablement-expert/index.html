@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics Enablement Workbench</title>
+<style>
+:root{--bg:#f7f7f4;--surface:#fff;--ink:#1f2328;--muted:#667085;--line:#e5e7eb;--accent:#315c49;--soft:#edf4f0;--warn:#9a6700;--risk:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}.wrap{max-width:1320px;margin:auto;padding:28px}.hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:22px}.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}.hero h1{font-family:Georgia,serif;font-weight:400;font-size:38px;margin:6px 0}.hero p{max-width:760px;color:var(--muted);line-height:1.55;margin:0}.stamp{font-size:12px;color:var(--muted);text-align:right}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}.kpi{grid-column:span 3}.wide{grid-column:span 8}.side{grid-column:span 4}.half{grid-column:span 6}.kpi .label{color:var(--muted);font-size:12px}.kpi .value{font-size:30px;font-weight:700;margin:8px 0 4px}.delta{font-size:12px;color:var(--accent)}h2{font-size:17px;margin:0 0 14px}.sub{font-size:12px;color:var(--muted);margin-top:-7px;margin-bottom:14px}.bar-row{display:grid;grid-template-columns:160px 1fr 52px;align-items:center;gap:10px;margin:12px 0;font-size:12px}.bar{height:10px;background:#eef0f2;border-radius:20px;overflow:hidden}.fill{height:100%;background:var(--accent)}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:var(--soft);color:var(--accent);font-size:11px}.risk{color:var(--risk)}.warn{color:var(--warn)}.rec{padding:12px 0;border-bottom:1px solid var(--line)}.rec:last-child{border-bottom:0}.rec b{display:block;margin-bottom:4px}.rec p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.step{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fafafa}.step b{font-size:12px}.step span{display:block;color:var(--muted);font-size:11px;margin-top:5px;line-height:1.4}.chart{height:230px;position:relative;border-left:1px solid var(--line);border-bottom:1px solid var(--line);margin:18px 6px 30px 40px}.chart svg{width:100%;height:100%;overflow:visible}.axis{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin-top:7px}.legend{font-size:11px;color:var(--muted)}@media(max-width:900px){.kpi,.wide,.side,.half{grid-column:span 12}.hero{display:block}.stamp{text-align:left;margin-top:10px}.flow{grid-template-columns:1fr}.bar-row{grid-template-columns:110px 1fr 45px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Customer communications analytics</div>
+      <h1>Analytics Enablement Workbench</h1>
+      <p>A decision-support prototype showing how campaign, engagement and customer-response data can be integrated, validated and translated into practical recommendations for targeting, communication strategy and workflow improvement.</p>
+    </div>
+    <div class="stamp">Portfolio prototype<br>Organisation-neutral demonstration</div>
+  </div>
+
+  <div class="grid">
+    <div class="card kpi"><div class="label">Eligible audience</div><div class="value">1.24m</div><div class="delta">+6.8% vs prior cycle</div></div>
+    <div class="card kpi"><div class="label">Engagement rate</div><div class="value">42.7%</div><div class="delta">+4.1 pp</div></div>
+    <div class="card kpi"><div class="label">Conversion rate</div><div class="value">8.9%</div><div class="delta">+1.3 pp</div></div>
+    <div class="card kpi"><div class="label">Cost per conversion</div><div class="value">$14.20</div><div class="delta">-11.6%</div></div>
+
+    <div class="card wide">
+      <h2>Weekly campaign response</h2><div class="sub">Illustrative trend view combining exposure, engagement and conversion signals.</div>
+      <div class="chart">
+        <svg viewBox="0 0 800 230" preserveAspectRatio="none">
+          <path d="M0 175 C80 170 110 140 160 145 S250 95 320 110 S420 75 480 82 S590 52 640 62 S740 35 800 42" fill="none" stroke="#315c49" stroke-width="4"/>
+          <path d="M0 190 C100 180 120 175 180 168 S310 150 360 148 S500 132 560 128 S690 108 800 102" fill="none" stroke="#9aa4ae" stroke-width="2" stroke-dasharray="6 5"/>
+        </svg>
+        <div class="axis"><span>Wk 1</span><span>Wk 2</span><span>Wk 3</span><span>Wk 4</span><span>Wk 5</span><span>Wk 6</span><span>Wk 7</span><span>Wk 8</span></div>
+      </div>
+      <div class="legend">Solid: conversion response &nbsp;&nbsp; Dashed: baseline</div>
+    </div>
+
+    <div class="card side">
+      <h2>Recommended actions</h2>
+      <div class="rec"><b>Increase allocation to Segment B</b><p>Higher conversion with lower cost-to-serve and stable response across recent cycles.</p></div>
+      <div class="rec"><b>Reduce frequency for Segment D</b><p>Engagement has flattened while opt-out signals are rising. Test lower communication frequency.</p></div>
+      <div class="rec"><b>Hold Segment E</b><p>Current evidence is below the minimum threshold for a confident commercial recommendation.</p></div>
+    </div>
+
+    <div class="card half">
+      <h2>Segment performance</h2>
+      <div class="bar-row"><span>High-value active</span><div class="bar"><div class="fill" style="width:82%"></div></div><strong>82</strong></div>
+      <div class="bar-row"><span>Digital engaged</span><div class="bar"><div class="fill" style="width:74%"></div></div><strong>74</strong></div>
+      <div class="bar-row"><span>Low-frequency</span><div class="bar"><div class="fill" style="width:58%"></div></div><strong>58</strong></div>
+      <div class="bar-row"><span>At-risk attrition</span><div class="bar"><div class="fill" style="width:39%"></div></div><strong>39</strong></div>
+      <div class="bar-row"><span>Dormant</span><div class="bar"><div class="fill" style="width:21%"></div></div><strong>21</strong></div>
+    </div>
+
+    <div class="card half">
+      <h2>Decision table</h2>
+      <table><thead><tr><th>Initiative</th><th>Evidence</th><th>Commercial view</th><th>Decision</th></tr></thead>
+      <tbody>
+      <tr><td>Message A</td><td>Strong uplift</td><td>Positive ROI</td><td><span class="pill">Proceed</span></td></tr>
+      <tr><td>Message B</td><td>Mixed by segment</td><td>Target selectively</td><td><span class="pill">Refine</span></td></tr>
+      <tr><td>Message C</td><td>Low confidence</td><td class="warn">Insufficient evidence</td><td>Test</td></tr>
+      <tr><td>Message D</td><td>Negative response</td><td class="risk">Value erosion risk</td><td>Do not proceed</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="card" style="grid-column:span 12">
+      <h2>Analytics enablement workflow</h2>
+      <div class="flow">
+        <div class="step"><b>1. Frame problem</b><span>Clarify business question, commercial objective, constraints and success measure.</span></div>
+        <div class="step"><b>2. Integrate data</b><span>Combine source systems, customer attributes, communications and response signals.</span></div>
+        <div class="step"><b>3. Validate</b><span>Clean, reconcile and document assumptions, definitions, exclusions and quality controls.</span></div>
+        <div class="step"><b>4. Analyse</b><span>Apply segmentation, trend analysis, scenario tests and statistical reasoning.</span></div>
+        <div class="step"><b>5. Recommend</b><span>Translate evidence into a clear action, risk, expected impact and next test.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
