@@ -8,7 +8,7 @@ function applicationActions(r){
   const out=[];
   if(String(r['CV text']||'').trim())out.push(['Copy CV','CV text','copy']);
   if(String(r['Cover letter text']||'').trim())out.push(['Copy cover','Cover letter text','copy']);
-  const links=[['Tailored CV','Open CV'],['Cover letter','Open cover'],['Dashboard','Dashboard'],['Apply link','Apply'],['Confirmation email','Confirmation'],['Latest email','Latest email']];
+  const links=[['Dashboard','Dashboard'],['Apply link','Apply'],['Confirmation email','Confirmation'],['Latest email','Latest email']];
   links.forEach(([field,label])=>{const u=linkFor(r,field);if(u)out.push([label,u,'link'])});
   return out;
 }
@@ -16,22 +16,52 @@ function applicationActions(r){
 function actionMarkup(r,limit){
   const items=applicationActions(r);
   return (limit?items.slice(0,limit):items).map(([label,value,type])=>{
-    if(type==='copy')return `<a class="mini-link copy-link" href="#" data-copy-row="${r._row}" data-copy-field="${esc(value)}" data-copy-label="${esc(label)}">${esc(label)}</a>`;
+    if(type==='copy')return `<button type="button" class="mini-link copy-link" data-copy-row="${r._row}" data-copy-field="${esc(value)}" data-copy-label="${esc(label)}">${esc(label)}</button>`;
     return `<a class="mini-link" href="${esc(value)}" target="_blank" rel="noopener">${esc(label)}</a>`;
   }).join('');
 }
 
+function copySourceText(rowNo,field){
+  const r=state.rows.find(x=>x._row===rowNo);if(!r)return '';
+  if(state.view==='documents'&&state.docRow===rowNo){
+    if(field==='CV text'){const el=document.getElementById('cvEditor');if(el)return el.value}
+    if(field==='Cover letter text'){const el=document.getElementById('clEditor');if(el)return el.value}
+  }
+  return String(r[field]||'');
+}
+
+function legacyCopy(text){
+  const active=document.activeElement;
+  const t=document.createElement('textarea');
+  t.value=text;
+  t.setAttribute('readonly','');
+  t.setAttribute('aria-hidden','true');
+  t.style.position='fixed';t.style.left='-9999px';t.style.top='0';t.style.opacity='0';t.style.pointerEvents='none';
+  document.body.appendChild(t);
+  t.focus();t.select();t.setSelectionRange(0,t.value.length);
+  let ok=false;try{ok=document.execCommand('copy')}catch(err){ok=false}
+  t.remove();
+  if(active&&typeof active.focus==='function')active.focus({preventScroll:true});
+  return ok;
+}
+
 async function copyAction(text,label){
-  try{await navigator.clipboard.writeText(String(text||''))}
-  catch(err){const t=document.createElement('textarea');t.value=String(text||'');t.setAttribute('readonly','');t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}
-  toast(`${label} copied`);
+  const value=String(text??'');
+  if(!value){toast(`${label} is empty`);return false}
+  let ok=false;
+  if(navigator.clipboard&&window.isSecureContext){
+    try{await navigator.clipboard.writeText(value);ok=true}catch(err){ok=false}
+  }
+  if(!ok)ok=legacyCopy(value);
+  toast(ok?`${label} copied`:`Could not copy ${label.toLowerCase()}`);
+  return ok;
 }
 
 document.addEventListener('click',e=>{
-  const a=e.target.closest('[data-copy-row][data-copy-field]');if(!a)return;
+  const b=e.target.closest('[data-copy-row][data-copy-field]');if(!b)return;
   e.preventDefault();e.stopPropagation();
-  const r=state.rows.find(x=>x._row===+a.dataset.copyRow);if(!r)return;
-  copyAction(r[a.dataset.copyField]||'',a.dataset.copyLabel||'Text');
+  const rowNo=+b.dataset.copyRow,field=b.dataset.copyField,label=b.dataset.copyLabel||'Text';
+  copyAction(copySourceText(rowNo,field),label);
 });
 
 function cachePayload(){return {rows:state.rows,source:state.source,sheet:state.sheet,loadedAt:state.loadedAt?new Date(state.loadedAt).toISOString():null}}
@@ -59,7 +89,7 @@ function documents(){
   const rows=documentRows(),r=currentDocumentRow();
   if(!r)return `${pageHead('CV & cover letters','Review and edit the document text loaded with the register.')}<div class="card"><div class="empty">No CV or cover-letter text is present in this register.</div></div>`;
   const cv=String(r['CV text']||''),cl=String(r['Cover letter text']||'');
-  return `${pageHead('CV & cover letters','Review, copy and edit the full text stored with each application.')}<div class="doc-toolbar"><select class="select doc-select" id="docSelect">${rows.map(x=>`<option value="${x._row}" ${x._row===r._row?'selected':''}>${esc(x.Company)} · ${esc(x.Role)}</option>`).join('')}</select><span class="badge b-neutral">${rows.length} applications with documents</span></div><div class="notice doc-note">Edits here are saved in this browser and immediately used by Copy CV / Copy cover. The Google Sheet remains the permanent source record.</div><section class="doc-grid"><article class="card doc-card"><div class="section-title"><div><h3>CV</h3><p><span id="cvWords">${wordCount(cv)}</span> words · <span id="cvChars">${cv.length}</span> characters</p></div><div class="linkrow"><a class="mini-link copy-link" href="#" data-copy-row="${r._row}" data-copy-field="CV text" data-copy-label="CV">Copy CV</a>${linkFor(r,'Tailored CV')?`<a class="mini-link" href="${esc(linkFor(r,'Tailored CV'))}" target="_blank" rel="noopener">Open original</a>`:''}</div></div><textarea class="doc-editor" id="cvEditor" spellcheck="true">${esc(cv)}</textarea></article><article class="card doc-card"><div class="section-title"><div><h3>Cover letter</h3><p><span id="clWords">${wordCount(cl)}</span> words · <span id="clChars">${cl.length}</span> characters</p></div><div class="linkrow"><a class="mini-link copy-link" href="#" data-copy-row="${r._row}" data-copy-field="Cover letter text" data-copy-label="Cover letter">Copy cover</a>${linkFor(r,'Cover letter')?`<a class="mini-link" href="${esc(linkFor(r,'Cover letter'))}" target="_blank" rel="noopener">Open original</a>`:''}</div></div><textarea class="doc-editor" id="clEditor" spellcheck="true">${esc(cl)}</textarea></article></section>`;
+  return `${pageHead('CV & cover letters','Review, copy and edit the full text stored with each application.')}<div class="doc-toolbar"><select class="select doc-select" id="docSelect">${rows.map(x=>`<option value="${x._row}" ${x._row===r._row?'selected':''}>${esc(x.Company)} · ${esc(x.Role)}</option>`).join('')}</select><span class="badge b-neutral">${rows.length} applications with documents</span></div><div class="notice doc-note">Edits here are saved in this browser and immediately used by Copy CV / Copy cover. The Google Sheet remains the permanent source record.</div><section class="doc-grid"><article class="card doc-card"><div class="section-title"><div><h3>CV</h3><p><span id="cvWords">${wordCount(cv)}</span> words · <span id="cvChars">${cv.length}</span> characters</p></div><button type="button" class="mini-link copy-link" data-copy-row="${r._row}" data-copy-field="CV text" data-copy-label="CV">Copy CV</button></div><textarea class="doc-editor" id="cvEditor" spellcheck="true">${esc(cv)}</textarea></article><article class="card doc-card"><div class="section-title"><div><h3>Cover letter</h3><p><span id="clWords">${wordCount(cl)}</span> words · <span id="clChars">${cl.length}</span> characters</p></div><button type="button" class="mini-link copy-link" data-copy-row="${r._row}" data-copy-field="Cover letter text" data-copy-label="Cover letter">Copy cover</button></div><textarea class="doc-editor" id="clEditor" spellcheck="true">${esc(cl)}</textarea></article></section>`;
 }
 
 const attachViewEventsBase=attachViewEvents;
