@@ -1,0 +1,26 @@
+18 September 2026
+
+Hiring Manager
+HCF Australia
+
+Dear Hiring Manager,
+
+I am applying for the Senior Business Insights Analyst role because it closely matches the way I work: using complex data to answer business questions, build reliable analytical products and translate findings into clear decisions for stakeholders.
+
+In my current NAB transformation role, I work across Clarity, Rally, Excel and stakeholder-maintained sources to integrate, clean, reconcile and analyse complex data. I use SQL, Python, Power BI, DAX and Power Query to build dashboards, forecasting tools and reporting products that help senior stakeholders understand performance, identify emerging issues and compare options.
+
+A large part of my work is investigative. I regularly deal with incomplete or inconsistent data, duplicate keys, conflicting definitions and unexpected movements. I test assumptions, trace issues back to source, apply validation controls and document the logic so the final output is reliable and repeatable rather than a one-off answer.
+
+My intelligence experience adds a strong customer and behavioural analytics dimension. I produced more than 100 strategic and operational assessments using customer, transaction, product and external data, identifying patterns, anomalies and changes that required action. I built repeatable analytical workflows and translated quantitative evidence into recommendations for senior and non-technical audiences.
+
+I also bring a strong continuous-improvement mindset. I have replaced manual reporting with automated workflows, improved governance around data products and used AI-assisted development tools to accelerate analysis, coding and documentation while retaining human review and quality controls.
+
+The role’s focus on membership, claims, benefits, revenue, KPIs, forecasting, automation and data quality is closely aligned with my experience in regulated financial services analytics and decision support. I would bring strong SQL, Python, Power BI and Excel capability together with disciplined data validation, clear communication and a practical approach to solving business problems.
+
+Please check my portfolio: sanadzadeh.github.io/Portfolio
+
+Kind regards,
+
+Khaled Sanad
+0412 700 786
+k.sanad@gmail.com
