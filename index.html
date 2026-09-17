@@ -43,22 +43,7 @@
 <aside class="drawer" id="drawer"><div class="drawer-head"><div><h2 id="drawerTitle"></h2><p id="drawerSub"></p></div><button class="btn" id="drawerClose" type="button">Close</button></div><div class="drawer-body" id="drawerBody"></div></aside>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="./core.js"></script>
-<script>
-const _renderSidebar=renderSidebar;
-renderSidebar=function(){
-  _renderSidebar();
-  const sidebar=document.getElementById('sidebar');
-  const meta=sidebar.querySelector('.side-meta');
-  const link=document.createElement('a');
-  link.className='nav sidebar-external';
-  link.href='https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit';
-  link.target='_blank';
-  link.rel='noopener';
-  link.style.textDecoration='none';
-  link.innerHTML='<span class="nav-num">↗</span><span class="nav-label">Google Sheet</span>';
-  sidebar.insertBefore(link,meta);
-};
-</script>
 <script src="./views.js"></script>
+<script src="./actions.js"></script>
 </body>
 </html>
