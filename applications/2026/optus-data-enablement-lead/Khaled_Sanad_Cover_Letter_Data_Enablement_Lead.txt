@@ -1,0 +1,24 @@
+18 September 2026
+
+Hiring Manager
+Optus
+
+Dear Hiring Manager,
+
+I am applying for the Data Enablement Lead role because it closely aligns with the work I do across data governance, analytics, reporting transformation and enterprise decision support.
+
+In my current NAB transformation role, I bring together data from Clarity, Rally, Excel and other enterprise sources, define business rules and measures, improve data quality and traceability, and build Power BI, scenario and browser-based analytical solutions for senior stakeholders. A major part of the work is creating reliable views of performance from fragmented inputs, resolving inconsistencies, documenting logic and controls, and making the resulting data easier to use for planning and investment decisions.
+
+I have hands-on experience with SQL, Python, Power BI, DAX, Power Query, dimensional modelling, validation, reconciliation and automation. I have also worked extensively on governance and data-quality problems, including source-of-truth issues, inconsistent definitions, incomplete data, control design and remediation. My approach is to make the data usable while ensuring the underlying rules, assumptions and evidence remain clear and defensible.
+
+My intelligence and financial crime experience strengthened this further. I worked with large customer, transaction and entity datasets, combined internal and external sources, investigated anomalies and data issues, and translated complex analysis into practical recommendations for senior and operational stakeholders. Across these roles, I have worked in environments where data quality, risk, controls and documentation directly affect decision quality.
+
+The role's focus on trusted data, single sources of truth, governance, remediation, reporting optimisation, self-service analytics and stakeholder leadership is particularly relevant to my background. I bring a combination of analytical depth, governance discipline and business-facing communication, with experience building practical solutions that improve how teams use data and make decisions.
+
+Please check my portfolio: sanadzadeh.github.io/Portfolio
+
+Kind regards,
+
+Khaled Sanad
+0412 700 786
+k.sanad@gmail.com
