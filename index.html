@@ -13,19 +13,17 @@
 </head>
 <body>
 <section class="landing" id="landing" aria-labelledby="landingTitle">
-  <div class="landing-panel">
+  <main class="landing-main">
     <h1 id="landingTitle">Job tracker</h1>
-    <p>Load the latest Excel register to open the dashboard.</p>
-    <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Upload Excel job application register">
-      <svg class="upload-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <strong>Drop .xlsx here</strong>
+    <p>Load the latest Excel register.</p>
+    <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Load Excel job application register">
+      <strong>Drop Excel file here</strong>
       <span>or</span>
       <label class="upload-button" for="landingFileInput">Choose file</label>
       <input id="landingFileInput" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
     </div>
     <div class="upload-status" id="uploadStatus" aria-live="polite"></div>
-    <p class="landing-note">The workbook stays in this browser session.</p>
-  </div>
+  </main>
 </section>
 
 <div class="shell is-hidden" id="dashboardShell">
