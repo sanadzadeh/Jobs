@@ -1,0 +1,26 @@
+18 September 2026
+
+Hiring Manager
+SSI
+
+Dear Hiring Manager,
+
+I am applying for the Senior Commercial Financial Analyst role because it closely matches the work I do across forecasting, scenario modelling, management reporting, investment analysis and executive decision support.
+
+In my current NAB transformation role, I support enterprise portfolio and investment decisions by bringing together cost, delivery, capacity, lifecycle and benefits information from multiple systems and stakeholder sources. I build scenario and forecasting models, test assumptions, analyse trade-offs and produce executive reporting that helps senior stakeholders understand performance, risks, options and likely outcomes.
+
+A large part of my work is turning fragmented or conflicting information into a reliable basis for decisions. I use advanced Excel, Power BI, DAX, Power Query, SQL and Python to reconcile data, automate recurring analysis and build models that make key assumptions visible. I also apply validation controls and documented business rules so management reporting remains consistent and traceable.
+
+My experience also includes more than 100 strategic and operational intelligence assessments, where I combined quantitative analysis, external information and stakeholder input to identify material trends and explain what action should follow. That work strengthened my ability to challenge assumptions constructively, conduct deep-dive analysis and communicate complex findings clearly to non-technical audiences.
+
+The role’s focus on program sustainability, changing service-delivery models, workforce and cost drivers, scenario analysis and strategic planning is particularly relevant to the kind of decision support I currently provide. I would bring a disciplined analytical approach, strong modelling and reporting capability, and practical experience working across Finance, Strategy, Technology and operational stakeholders.
+
+I am also comfortable using emerging technology to improve finance and reporting workflows. I use AI tools for analysis, coding, research and documentation with deliberate review and governance, and I have built repeatable analytical tools that reduce manual effort and improve decision speed.
+
+Please check my portfolio: sanadzadeh.github.io/Portfolio
+
+Kind regards,
+
+Khaled Sanad
+0412 700 786
+k.sanad@gmail.com
