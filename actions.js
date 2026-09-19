@@ -29,7 +29,7 @@ function hydrateDocumentText(rows=state.rows){
     r['Cover letter text']=String(d.cover||'');
   });
 }
-function documentRows(){return state.rows.filter(r=>String(r['CV text']||'').trim()||String(r['Cover letter text']||'').trim())}
+function documentRows(){return state.rows.filter(r=>String(r['CV text']||'').trim()||String(r['Cover letter text']||'').trim()).slice().sort((a,b)=>String(a.Company||'').localeCompare(String(b.Company||''),undefined,{sensitivity:'base'})||String(a.Role||'').localeCompare(String(b.Role||''),undefined,{sensitivity:'base'}))}
 function wordCount(s){const x=String(s||'').trim();return x?x.split(/\s+/).length:0}
 function currentDocumentRow(){const rows=documentRows();if(!rows.length)return null;let r=rows.find(x=>x._row===state.docRow);if(!r){r=rows[0];state.docRow=r._row}return r}
 
@@ -120,6 +120,9 @@ function documents(){
 const attachViewEventsBase=attachViewEvents;
 attachViewEvents=function(){
   attachViewEventsBase();
+  const keepSearchFocus=(id)=>{const el=document.getElementById(id);if(!el)return;el.oninput=e=>{const value=e.target.value,pos=e.target.selectionStart??value.length;state.filter=value;render();requestAnimationFrame(()=>{const next=document.getElementById(id);if(next){next.focus({preventScroll:true});next.setSelectionRange(Math.min(pos,next.value.length),Math.min(pos,next.value.length))}})}};
+  keepSearchFocus('pipeSearch');
+  keepSearchFocus('appSearch');
   const ds=document.getElementById('docSelect');if(ds)ds.onchange=e=>{state.docRow=+e.target.value;render()};
   const cv=document.getElementById('cvEditor');if(cv)cv.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['CV text']=e.target.value;document.getElementById('cvWords').textContent=wordCount(e.target.value);document.getElementById('cvChars').textContent=e.target.value.length};
   const cl=document.getElementById('clEditor');if(cl)cl.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['Cover letter text']=e.target.value;document.getElementById('clWords').textContent=wordCount(e.target.value);document.getElementById('clChars').textContent=e.target.value.length};
