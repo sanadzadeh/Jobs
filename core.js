@@ -4,7 +4,7 @@ const ACTIVE=new Set(['Applied','Under review','Interview completed','No outcome
 const VIEWS=[['overview','Overview'],['pipeline','Pipeline'],['applications','Applications'],['deadlines','Deadlines'],['quality','Data quality']];
 let state={rows:[],view:localStorage.getItem('jobDashView')||'overview',source:'',sheet:'',loadedAt:null,filter:'',status:'All',company:'All',hideClosed:true,sort:'deadline'};
 
-const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2400)}
 function dateFrom(v){if(!v)return null;if(v instanceof Date&&!isNaN(v))return new Date(v);if(typeof v==='number'){const o=XLSX.SSF.parse_date_code(v);return o?new Date(o.y,o.m-1,o.d):null}const s=String(v).trim();const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);const d=new Date(s);return isNaN(d)?null:d}
 function fmtDate(v){const d=dateFrom(v);return d?d.toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'}):''}
