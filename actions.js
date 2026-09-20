@@ -1,11 +1,19 @@
-if(!VIEWS.some(v=>v[0]==='documents'))VIEWS.splice(5,0,['documents','CV & cover letters']);
+if(!VIEWS.some(v=>v[0]==='documents')){
+  const qualityIndex=VIEWS.findIndex(v=>v[0]==='quality');
+  VIEWS.splice(qualityIndex<0?VIEWS.length:qualityIndex,0,['documents','CV & cover letters']);
+}
+if(!VIEWS.some(v=>v[0]==='offline')){
+  const qualityIndex=VIEWS.findIndex(v=>v[0]==='quality');
+  VIEWS.splice(qualityIndex<0?VIEWS.length:qualityIndex,0,['offline','Offline']);
+}
+if(!Array.isArray(state.offlineRows))state.offlineRows=[];
 
 let cleanDocuments=[];
 const normDoc=s=>String(s??'').trim().toLowerCase().replace(/\s+/g,' ');
 function docMatch(r,d){
   const rJob=normDoc(r['Job ID']),dJob=normDoc(d.jobId);
   if(rJob&&dJob&&rJob===dJob)return true;
-  return normDoc(r.Company)===normDoc(d.company)&&normDoc(r.Role)===normDoc(d.role);
+  return normDoc(r.Company)===normDoc(d.company)&&normDoc(d.role)===normDoc(r.Role);
 }
 async function loadCleanDocuments(){
   const b64=window.JOB_DOCUMENTS_GZIP_B64||'';
@@ -79,14 +87,14 @@ document.addEventListener('click',e=>{
 
 function cachePayload(){
   const rows=state.rows.map(r=>{const x={...r};delete x['CV text'];delete x['Cover letter text'];return x});
-  return {rows,source:state.source,sheet:state.sheet,loadedAt:state.loadedAt?new Date(state.loadedAt).toISOString():null};
+  return {rows,offlineRows:state.offlineRows||[],source:state.source,sheet:state.sheet,loadedAt:state.loadedAt?new Date(state.loadedAt).toISOString():null};
 }
 function persistCache(){try{localStorage.setItem('jobDashRegisterCache',JSON.stringify(cachePayload()))}catch(err){console.warn('Could not cache register',err)}}
 function restoreCache(){
   try{
     const raw=localStorage.getItem('jobDashRegisterCache');if(!raw)return false;
     const d=JSON.parse(raw);if(!Array.isArray(d.rows)||!d.rows.length)return false;
-    state.rows=d.rows;hydrateDocumentText(state.rows);
+    state.rows=d.rows;state.offlineRows=Array.isArray(d.offlineRows)?d.offlineRows:[];hydrateDocumentText(state.rows);
     state.source=d.source||'Cached register';state.sheet=d.sheet||CONFIG.sheetName;state.loadedAt=d.loadedAt?new Date(d.loadedAt):new Date();
     showDashboard();render();return true;
   }catch(err){console.warn('Could not restore cached register',err);return false}
@@ -94,6 +102,7 @@ function restoreCache(){
 const parseWorkbookBase=parseWorkbook;
 parseWorkbook=function(buf,sourceLabel){
   parseWorkbookBase(buf,sourceLabel);
+  state.offlineRows=typeof parseOfflineSheet==='function'?parseOfflineSheet(buf):[];
   hydrateDocumentText(state.rows);
   persistCache();
   render();
@@ -127,7 +136,7 @@ attachViewEvents=function(){
   const cv=document.getElementById('cvEditor');if(cv)cv.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['CV text']=e.target.value;document.getElementById('cvWords').textContent=wordCount(e.target.value);document.getElementById('cvChars').textContent=e.target.value.length};
   const cl=document.getElementById('clEditor');if(cl)cl.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['Cover letter text']=e.target.value;document.getElementById('clWords').textContent=wordCount(e.target.value);document.getElementById('clChars').textContent=e.target.value.length};
 };
-renderSidebar=function(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,analytics:'',documents:documentRows().length,quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Views</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">0${i+1}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<a class="nav sidebar-link" href="https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit" target="_blank" rel="noopener"><span class="nav-num">↗</span><span class="nav-label">Google Sheet</span></a><div class="side-meta">${sourceInfo()}</div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()})};
-render=function(){if(!state.rows.length)return;renderSidebar();const views={overview,pipeline,applications,deadlines,analytics,documents,quality};document.getElementById('main').innerHTML=(views[state.view]||overview)();attachViewEvents()};
+renderSidebar=function(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,analytics:'',documents:documentRows().length,offline:(state.offlineRows||[]).length,quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Views</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">${String(i+1).padStart(2,'0')}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<a class="nav sidebar-link" href="https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit" target="_blank" rel="noopener"><span class="nav-num">↗</span><span class="nav-label">Google Sheet</span></a><div class="side-meta">${sourceInfo()}</div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()})};
+render=function(){if(!state.rows.length)return;renderSidebar();const views={overview,pipeline,applications,deadlines,analytics,documents,offline,quality};document.getElementById('main').innerHTML=(views[state.view]||overview)();attachViewEvents()};
 
 loadCleanDocuments().then(()=>restoreCache());
