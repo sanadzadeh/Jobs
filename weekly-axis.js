@@ -23,13 +23,15 @@ function weeklySeries(){
       if(!latest||w>latest)latest=w;
     }
 
-    if(r.Status==='Rejected'){
-      const rd=dateFrom(r['Last update']);
-      if(rd){
-        const w=weekStartMonday(rd),k=weekKey(w);
-        rejected.set(k,(rejected.get(k)||0)+1);
-        if(!latest||w>latest)latest=w;
-      }
+    const u=dateFrom(r['Last update']);
+    if(u){
+      const w=weekStartMonday(u);
+      if(!latest||w>latest)latest=w;
+    }
+
+    if(r.Status==='Rejected'&&u){
+      const w=weekStartMonday(u),k=weekKey(w);
+      rejected.set(k,(rejected.get(k)||0)+1);
     }
   });
 
