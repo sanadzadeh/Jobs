@@ -9,11 +9,13 @@ function renderSidebar(){
 const followUpStyle=document.createElement('style');
 followUpStyle.textContent=`
   .overview-focus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-bottom:11px}
-  .job-card.follow-up{background:var(--warn-dim);border-color:color-mix(in srgb,var(--warn) 42%,var(--border))}
+  .job-card.follow-up{background:var(--warn-dim);border-color:color-mix(in srgb,var(--warn) 55%,var(--border))}
   .job-card.follow-up:hover{border-color:var(--warn)}
-  .follow-up-app-row td{background:var(--warn-dim)!important}
-  .follow-up-app-row td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
-  .follow-up-app-row:hover td{background:color-mix(in srgb,var(--warn-dim) 78%,var(--warn) 22%)!important}
+  .follow-up-app-row td{background:color-mix(in srgb,var(--warn-dim) 72%,#f0c85a 28%)!important}
+  .follow-up-app-row td:first-child{box-shadow:inset 5px 0 0 var(--warn)}
+  .follow-up-app-row .badge{color:var(--warn)!important;background:color-mix(in srgb,var(--warn-dim) 58%,#f0c85a 42%)!important}
+  .follow-up-app-row .badge:before{background:var(--warn)!important}
+  .follow-up-app-row:hover td{background:color-mix(in srgb,var(--warn-dim) 55%,#e7b943 45%)!important}
   @media(max-width:860px){.overview-focus{grid-template-columns:1fr}}
 `;
 document.head.appendChild(followUpStyle);
