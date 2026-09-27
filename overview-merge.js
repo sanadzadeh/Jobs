@@ -8,18 +8,10 @@ function renderSidebar(){
 
 const followUpStyle=document.createElement('style');
 followUpStyle.textContent=`
-  .overview-focus{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px;margin-bottom:11px}
-  .overview-followups{grid-column:span 4}
-  .followup-list{display:grid;gap:6px}
-  .followup-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 0;border-top:1px solid var(--border);cursor:pointer}
-  .followup-row:first-child{border-top:0;padding-top:0}
-  .followup-row strong{display:block;font-size:.78rem}
-  .followup-row span{display:block;margin-top:2px;color:var(--ink-3);font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .followup-age{font:600 .66rem var(--mono);color:var(--warn);white-space:nowrap}
+  .overview-focus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-bottom:11px}
   .job-card.follow-up{background:var(--warn-dim);border-color:color-mix(in srgb,var(--warn) 42%,var(--border))}
   .job-card.follow-up:hover{border-color:var(--warn)}
-  @media(max-width:1180px){.overview-focus{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-followups{grid-column:1/-1}}
-  @media(max-width:860px){.overview-focus{grid-template-columns:1fr}.overview-followups{grid-column:auto}}
+  @media(max-width:860px){.overview-focus{grid-template-columns:1fr}}
 `;
 document.head.appendChild(followUpStyle);
 
@@ -72,7 +64,7 @@ function overview(){
   const topCompanies=Object.entries(cm).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const att=attentionItems();
   return `${pageHead('Overview','Application activity, follow-ups, status, organisation concentration and upcoming deadlines.')}
-  <section class="overview-focus"><div class="card"><div class="eyebrow">Applied</div><div class="kpi-value">${applied}</div><div class="kpi-sub">Submitted applications</div></div><div class="card"><div class="eyebrow">Prepared</div><div class="kpi-value">${c.prepared}</div><div class="kpi-sub">Ready to submit</div></div><div class="card overview-followups"><div class="section-title"><div><h3>Follow up</h3><p>Applied 7 or more days ago and still active.</p></div></div><div class="followup-list">${followUps.length?followUps.slice(0,5).map(r=>`<div class="followup-row" data-open="${r._row}"><div><strong>${esc(r.Company)}</strong><span>${esc(r.Role)}</span></div><div class="followup-age">${followUpAgeDays(r)}d</div></div>`).join(''):`<div class="notice">No applications currently need follow-up.</div>`}</div></div></section>
+  <section class="overview-focus"><div class="card"><div class="eyebrow">Applied</div><div class="kpi-value">${applied}</div><div class="kpi-sub">Submitted applications</div></div><div class="card"><div class="eyebrow">Prepared</div><div class="kpi-value">${c.prepared}</div><div class="kpi-sub">Ready to submit</div></div><div class="card"><div class="eyebrow">Follow up</div><div class="kpi-value">${followUps.length}</div><div class="kpi-sub">Applied 7+ days ago and still active</div></div></section>
   <section class="grid" style="grid-template-columns:minmax(0,1.55fr) minmax(250px,.72fr) minmax(0,1.08fr);margin-top:18px"><div class="card"><div class="section-title"><div><h3>Application activity</h3><p>Submissions by week.</p></div></div>${lineChart(weeklySeries())}</div><div class="card"><div class="section-title"><div><h3>Status distribution</h3><p>Current status mix by percentage.</p></div></div>${compactStatusBreakdown()}</div><div class="card"><div class="section-title"><div><h3>Most targeted organisations</h3><p>Share of applications among the ten most frequent organisations.</p></div></div>${treemap(topCompanies)}</div></section>
   <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Dashboard insights</h3><p>Follow-ups, deadlines and data checks.</p></div></div>${att.length?att.map(([t,r])=>`<div class="attention-row" data-open="${r._row}"><strong>${esc(t)}</strong><div>${esc(r.Company)} · ${esc(r.Role)}</div><span class="row-chevron">›</span></div>`).join(''):`<div class="notice">Nothing needs immediate attention.</div>`}</section>
   <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Next prepared applications</h3><p>Missing deadlines first, then earliest closing dates.</p></div><button class="btn soft" data-goto="deadlines">View all</button></div><div class="deadline-list">${deadlineRows().map(deadlineMarkup).join('')||`<div class="empty">No prepared applications in this workbook.</div>`}</div></section>`;
