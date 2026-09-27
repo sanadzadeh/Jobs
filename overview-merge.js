@@ -11,6 +11,9 @@ followUpStyle.textContent=`
   .overview-focus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-bottom:11px}
   .job-card.follow-up{background:var(--warn-dim);border-color:color-mix(in srgb,var(--warn) 42%,var(--border))}
   .job-card.follow-up:hover{border-color:var(--warn)}
+  .follow-up-app-row td{background:var(--warn-dim)!important}
+  .follow-up-app-row td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+  .follow-up-app-row:hover td{background:color-mix(in srgb,var(--warn-dim) 78%,var(--warn) 22%)!important}
   @media(max-width:860px){.overview-focus{grid-template-columns:1fr}}
 `;
 document.head.appendChild(followUpStyle);
@@ -50,6 +53,11 @@ function cardMarkup(r){
   const n=daysUntil(r.Deadline),meta=r.Status==='Prepared'?(r.Deadline?(n===null?'':n<0?'Expired':n===0?'Due today':`${n}d`):'No deadline'):(r['Applied date']?`Applied ${fmtDate(r['Applied date'])}`:'');
   return `<div class="job-card ${needsFollowUp(r)?'follow-up':''}" data-open="${r._row}"><div class="co">${esc(r.Company)}</div><div class="rl">${esc(r.Role)}</div><div class="meta"><span>${statusBadge(r.Status)}</span><span>${esc(meta)}</span></div></div>`;
 }
+
+appTable=function(){
+  const rows=filteredRows();
+  return `${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Deadline</th><th>Job ID</th><th>Contact</th><th>Links</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr class="${needsFollowUp(r)?'follow-up-app-row':''}" data-open="${r._row}"><td>${statusBadge(r.Status)}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(r['Job ID'])}</td><td>${esc(r.Contact||r['Contact email'])}</td><td><div class="link-row">${usefulLinks(r).slice(0,5).map(([l,u])=>u?`<a class="mini-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`:'').join('')}</div></td><td class="row-chevron">›</td></tr>`).join('')||`<tr><td colspan="9"><div class="empty">No applications match these filters.</div></td></tr>`}</tbody></table></div>${rows.length?`<div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. Deadline sorting is the default.</div>`:''}`;
+};
 
 function compactStatusBreakdown(){
   const entries=statusEntries(),total=entries.reduce((n,x)=>n+x[1],0)||1,gradient=conicGradient(entries,total);
