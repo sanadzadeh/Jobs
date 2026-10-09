@@ -108,6 +108,7 @@ dz.addEventListener('click',e=>{if(e.target.closest('label'))return;landingInput
 document.getElementById('drawerClose').onclick=closeDrawer;document.getElementById('drawerBackdrop').onclick=closeDrawer;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();if(state.rows.length&&e.key==='/'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){e.preventDefault();state.view='applications';render();setTimeout(()=>document.getElementById('appSearch')?.focus(),20)}});
 function updateThemeButton(){document.getElementById('themeBtn').textContent=document.documentElement.dataset.theme==='dark'?'Light mode':'Dark mode'}
-document.documentElement.dataset.theme=localStorage.getItem('jobDashTheme')||'light';updateThemeButton();
-document.getElementById('themeBtn').onclick=()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;localStorage.setItem('jobDashTheme',n);updateThemeButton()};
+function syncBrowserThemeColor(){const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',document.documentElement.dataset.theme==='dark'?'#0e1317':'#f4f6f7')}
+document.documentElement.dataset.theme=localStorage.getItem('jobDashTheme')||'light';updateThemeButton();syncBrowserThemeColor();
+document.getElementById('themeBtn').onclick=()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;localStorage.setItem('jobDashTheme',n);updateThemeButton();syncBrowserThemeColor()};
 showLanding();
