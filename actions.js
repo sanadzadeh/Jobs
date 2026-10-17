@@ -7,6 +7,11 @@ if(!VIEWS.some(v=>v[0]==='offline')){
   VIEWS.splice(qualityIndex<0?VIEWS.length:qualityIndex,0,['offline','Offline']);
 }
 if(!Array.isArray(state.offlineRows))state.offlineRows=[];
+if(!VIEWS.some(v=>v[0]==='masterCVs')){
+ const i=VIEWS.findIndex(v=>v[0]==='quality');
+ VIEWS.splice(i<0?VIEWS.length:i,0,['masterCVs','Master CVs']);
+}
+if(!Array.isArray(state.masterCVRows))state.masterCVRows=[];
 
 let cleanDocuments=[];
 if(typeof state.docPreparedOnly!=='boolean')state.docPreparedOnly=true;
@@ -105,6 +110,7 @@ const parseWorkbookBase=parseWorkbook;
 parseWorkbook=function(buf,sourceLabel){
   parseWorkbookBase(buf,sourceLabel);
   state.offlineRows=typeof parseOfflineSheet==='function'?parseOfflineSheet(buf):[];
+  state.masterCVRows=typeof parseMasterCVSheet==='function'?parseMasterCVSheet(buf):[];
   hydrateDocumentText(state.rows);
   persistCache();
   render();
@@ -139,7 +145,7 @@ attachViewEvents=function(){
   const cv=document.getElementById('cvEditor');if(cv)cv.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['CV text']=e.target.value;document.getElementById('cvWords').textContent=wordCount(e.target.value);document.getElementById('cvChars').textContent=e.target.value.length};
   const cl=document.getElementById('clEditor');if(cl)cl.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['Cover letter text']=e.target.value;document.getElementById('clWords').textContent=wordCount(e.target.value);document.getElementById('clChars').textContent=e.target.value.length};
 };
-renderSidebar=function(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,analytics:'',documents:filteredDocumentRows().length,offline:(state.offlineRows||[]).length,quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Views</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">${String(i+1).padStart(2,'0')}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<a class="nav sidebar-link" href="https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit" target="_blank" rel="noopener"><span class="nav-num">↗</span><span class="nav-label">Google Sheet</span></a><div class="side-meta">${sourceInfo()}</div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()})};
-render=function(){if(!state.rows.length)return;renderSidebar();const views={overview,pipeline,applications,deadlines,analytics,documents,offline,quality};document.getElementById('main').innerHTML=(views[state.view]||overview)();attachViewEvents()};
+renderSidebar=function(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,analytics:'',documents:filteredDocumentRows().length,offline:(state.offlineRows||[]).length,masterCVs:(state.masterCVRows||[]).length,quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Views</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">${String(i+1).padStart(2,'0')}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<a class="nav sidebar-link" href="https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit" target="_blank" rel="noopener"><span class="nav-num">↗</span><span class="nav-label">Google Sheet</span></a><div class="side-meta">${sourceInfo()}</div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()})};
+render=function(){if(!state.rows.length)return;renderSidebar();const views={overview,pipeline,applications,deadlines,analytics,documents,offline,masterCVs,quality};document.getElementById('main').innerHTML=(views[state.view]||overview)();attachViewEvents()};
 
 loadCleanDocuments().then(()=>restoreCache());
