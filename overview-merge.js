@@ -8,7 +8,7 @@ function renderSidebar(){
 
 const followUpStyle=document.createElement('style');
 followUpStyle.textContent=`
-  .overview-focus{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-bottom:11px}
+  .overview-focus{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px;margin-bottom:11px}
   .job-card.follow-up{background:var(--warn-dim);border-color:color-mix(in srgb,var(--warn) 55%,var(--border))}
   .job-card.follow-up:hover{border-color:var(--warn)}
   .follow-up-app-row td{background:color-mix(in srgb,var(--warn-dim) 72%,#f0c85a 28%)!important}
@@ -58,7 +58,7 @@ function cardMarkup(r){
 
 appTable=function(){
   const rows=filteredRows();
-  return `${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Deadline</th><th>Job ID</th><th>Contact</th><th>Links</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr class="${needsFollowUp(r)?'follow-up-app-row':''}" data-open="${r._row}"><td>${statusBadge(r.Status)}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(r['Job ID'])}</td><td>${esc(r.Contact||r['Contact email'])}</td><td><div class="link-row">${usefulLinks(r).slice(0,5).map(([l,u])=>u?`<a class="mini-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`:'').join('')}</div></td><td class="row-chevron">›</td></tr>`).join('')||`<tr><td colspan="9"><div class="empty">No applications match these filters.</div></td></tr>`}</tbody></table></div>${rows.length?`<div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. Deadline sorting is the default.</div>`:''}`;
+  return `${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Response (days)</th><th>Deadline</th><th>Job ID</th><th>Contact</th><th>Links</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr class="${needsFollowUp(r)?'follow-up-app-row':''}" data-open="${r._row}"><td>${statusBadge(r.Status)}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${esc(r['Rejection response (days)']??'')}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(r['Job ID'])}</td><td>${esc(r.Contact||r['Contact email'])}</td><td><div class="link-row">${usefulLinks(r).slice(0,5).map(([l,u])=>u?`<a class="mini-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`:'').join('')}</div></td><td class="row-chevron">›</td></tr>`).join('')||`<tr><td colspan="10"><div class="empty">No applications match these filters.</div></td></tr>`}</tbody></table></div>${rows.length?`<div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. Deadline sorting is the default.</div>`:''}`;
 };
 
 function compactStatusBreakdown(){
@@ -70,12 +70,15 @@ function overview(){
   const c=counts();
   const applied=state.rows.filter(r=>r['Applied date']).length;
   const rejected=state.rows.filter(r=>r.Status==='Rejected').length;
+  // Only numeric, evidence-backed rejection response durations from the register.
+  const responseDays=state.rows.filter(r=>r.Status==='Rejected').map(r=>r['Rejection response (days)']).filter(v=>v!==''&&v!==null&&v!==undefined&&Number.isFinite(Number(v))&&Number(v)>=0).map(Number);
+  const avgResponse=responseDays.length?(responseDays.reduce((a,b)=>a+b,0)/responseDays.length).toFixed(1):'—';
   const followUps=followUpRows();
   const cm={};state.rows.forEach(r=>{if(r.Company)cm[r.Company]=(cm[r.Company]||0)+1});
   const topCompanies=Object.entries(cm).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const att=attentionItems();
   return `${pageHead('Overview','Application activity, follow-ups, status, organisation concentration and upcoming deadlines.')}
-  <section class="overview-focus"><div class="card"><div class="eyebrow">Applied</div><div class="kpi-value">${applied}</div><div class="kpi-sub">Submitted applications</div></div><div class="card"><div class="eyebrow">Prepared</div><div class="kpi-value">${c.prepared}</div><div class="kpi-sub">Ready to submit</div></div><div class="card"><div class="eyebrow">Follow up</div><div class="kpi-value">${followUps.length}</div><div class="kpi-sub">Applied 7+ days ago and still active</div></div><div class="card"><div class="eyebrow">Rejected</div><div class="kpi-value">${rejected}</div><div class="kpi-sub">Closed as rejected</div></div></section>
+  <section class="overview-focus"><div class="card"><div class="eyebrow">Applied</div><div class="kpi-value">${applied}</div><div class="kpi-sub">Submitted applications</div></div><div class="card"><div class="eyebrow">Prepared</div><div class="kpi-value">${c.prepared}</div><div class="kpi-sub">Ready to submit</div></div><div class="card"><div class="eyebrow">Follow up</div><div class="kpi-value">${followUps.length}</div><div class="kpi-sub">Applied 7+ days ago and still active</div></div><div class="card"><div class="eyebrow">Rejected</div><div class="kpi-value">${rejected}</div><div class="kpi-sub">Closed as rejected</div></div><div class="card"><div class="eyebrow">Avg rejection response</div><div class="kpi-value">${avgResponse}${responseDays.length?'d':''}</div><div class="kpi-sub">${responseDays.length} confirmed responses · calendar days</div></div></section>
   <section class="grid" style="grid-template-columns:minmax(0,1.55fr) minmax(250px,.72fr) minmax(0,1.08fr);margin-top:18px"><div class="card"><div class="section-title"><div><h3>Application activity</h3><p>Submissions by week.</p></div></div>${lineChart(weeklySeries())}</div><div class="card"><div class="section-title"><div><h3>Status distribution</h3><p>Current status mix by percentage.</p></div></div>${compactStatusBreakdown()}</div><div class="card"><div class="section-title"><div><h3>Most targeted organisations</h3><p>Share of applications among the ten most frequent organisations.</p></div></div>${treemap(topCompanies)}</div></section>
   <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Dashboard insights</h3><p>Follow-ups, deadlines and data checks.</p></div></div>${att.length?att.map(([t,r])=>`<div class="attention-row" data-open="${r._row}"><strong>${esc(t)}</strong><div>${esc(r.Company)} · ${esc(r.Role)}</div><span class="row-chevron">›</span></div>`).join(''):`<div class="notice">Nothing needs immediate attention.</div>`}</section>
   <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Next prepared applications</h3><p>Missing deadlines first, then earliest closing dates.</p></div><button class="btn soft" data-goto="deadlines">View all</button></div><div class="deadline-list">${deadlineRows().map(deadlineMarkup).join('')||`<div class="empty">No prepared applications in this workbook.</div>`}</div></section>`;
