@@ -57,7 +57,7 @@ function cardMarkup(r){
   const timing=responseTiming(r);
   const responseLabel=timing?(timing.kind==='rejected'?`Response ${timing.days}d`:timing.days>=0?`Waiting ${timing.days}d`:`Deadline in ${Math.abs(timing.days)}d`):'';
   const n=daysUntil(r.Deadline),meta=r.Status==='Prepared'?(r.Deadline?(n===null?'':n<0?'Expired':n===0?'Due today':`${n}d`):'No deadline'):(r['Applied date']?`Applied ${fmtDate(r['Applied date'])}`:'');
-  return `<div class="job-card ${isInProgress(r)?'in-progress':''}" data-open="${r._row}"><div class="co">${esc(r.Company)}</div><div class="rl">${esc(r.Role)}</div><div class="meta"><span>${statusBadge(r.Status)}</span><span>${esc(meta)}</span>${responseLabel?`<span class="response-time-label">${esc(responseLabel)}</span>`:''}</div></div>`;
+  return `<div class="job-card ${isInProgress(r)?'in-progress':''}" data-open="${r._row}"><div class="co">${esc(r.Company)}</div><div class="rl">${esc(r.Role)}</div><div class="meta"><span>${isInProgress(r)&&r.Status==='Applied'?'<span class="badge b-good">Applied</span>':statusBadge(r.Status)}</span><span>${esc(meta)}</span>${responseLabel?`<span class="response-time-label">${esc(responseLabel)}</span>`:''}</div></div>`;
 }
 
 appTable=function(){
