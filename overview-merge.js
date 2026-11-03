@@ -6,38 +6,37 @@ function renderSidebar(){
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()});
 }
 
-const followUpStyle=document.createElement('style');
-followUpStyle.textContent=`
+const inProgressStyle=document.createElement('style');
+inProgressStyle.textContent=`
   .overview-focus{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px;margin-bottom:11px}
   .response-summary{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
   .response-summary strong{font:600 1.3rem var(--serif)}
   .response-time-label{font-size:.62rem;color:var(--ink-2)}
-  .job-card.follow-up{background:var(--warn-dim);border-color:color-mix(in srgb,var(--warn) 55%,var(--border))}
-  .job-card.follow-up:hover{border-color:var(--warn)}
-  .follow-up-app-row td{background:color-mix(in srgb,var(--warn-dim) 72%,#f0c85a 28%)!important}
-  .follow-up-app-row td:first-child{box-shadow:inset 5px 0 0 var(--warn)}
-  .follow-up-app-row .badge{color:var(--warn)!important;background:color-mix(in srgb,var(--warn-dim) 58%,#f0c85a 42%)!important}
-  .follow-up-app-row .badge:before{background:var(--warn)!important}
-  .follow-up-app-row:hover td{background:color-mix(in srgb,var(--warn-dim) 55%,#e7b943 45%)!important}
+  .job-card.in-progress{background:color-mix(in srgb,var(--good) 8%,var(--surface));border-color:var(--good)}
+  .in-progress-app-row td{background:color-mix(in srgb,var(--good) 7%,var(--surface))!important}
+  .in-progress-app-row td:first-child{box-shadow:inset 4px 0 0 var(--good)}
+  .in-progress-app-row:hover td{background:color-mix(in srgb,var(--good) 13%,var(--surface))!important}
+  .in-progress-app-row .badge,.job-card.in-progress .badge{color:var(--good)!important;background:color-mix(in srgb,var(--good) 14%,var(--surface))!important}
+  .in-progress-app-row .badge:before{background:var(--good)!important}
+  .in-progress-days{color:var(--good)!important;font-weight:700}
   @media(max-width:860px){.overview-focus{grid-template-columns:1fr}}
 `;
-document.head.appendChild(followUpStyle);
+document.head.appendChild(inProgressStyle);
 
-function followUpAgeDays(r){
-  const d=dateFrom(r['Applied date']);
-  if(!d)return null;
-  const today=new Date();today.setHours(0,0,0,0);d.setHours(0,0,0,0);
-  return Math.floor((today-d)/86400000);
+// Calendar-day age relative to closing date, not submission date.
+function daysSinceDeadline(r){
+  if(!r.Deadline)return null;
+  return calendarDaysBetween(r.Deadline,new Date());
 }
-function needsFollowUp(r){
-  const age=followUpAgeDays(r);
-  return age!==null&&age>=7&&['Applied','Under review','CV acknowledged','No outcome found'].includes(r.Status);
+function isInProgress(r){
+  const d=daysSinceDeadline(r);
+  return d!==null&&d>15&&['Applied','Under review','Interview completed','No outcome found','CV acknowledged','Talent pool / EOI'].includes(r.Status);
 }
-function followUpRows(){return state.rows.filter(needsFollowUp).sort((a,b)=>followUpAgeDays(b)-followUpAgeDays(a))}
+function inProgressRows(){return state.rows.filter(isInProgress).sort((a,b)=>daysSinceDeadline(b)-daysSinceDeadline(a))}
 
 function attentionItems(){
   const out=[];
-  followUpRows().forEach(r=>out.push([`Follow up · ${followUpAgeDays(r)}d since application`,r]));
+  inProgressRows().forEach(r=>out.push([`In Progress · ${daysSinceDeadline(r)} days since deadline`,r]));
   state.rows.forEach(r=>{
     if(r.Status==='Prepared'){
       const n=daysUntil(r.Deadline);
@@ -58,14 +57,14 @@ function cardMarkup(r){
   const timing=responseTiming(r);
   const responseLabel=timing?(timing.kind==='rejected'?`Response ${timing.days}d`:timing.days>=0?`Waiting ${timing.days}d`:`Deadline in ${Math.abs(timing.days)}d`):'';
   const n=daysUntil(r.Deadline),meta=r.Status==='Prepared'?(r.Deadline?(n===null?'':n<0?'Expired':n===0?'Due today':`${n}d`):'No deadline'):(r['Applied date']?`Applied ${fmtDate(r['Applied date'])}`:'');
-  return `<div class="job-card ${needsFollowUp(r)?'follow-up':''}" data-open="${r._row}"><div class="co">${esc(r.Company)}</div><div class="rl">${esc(r.Role)}</div><div class="meta"><span>${statusBadge(r.Status)}</span><span>${esc(meta)}</span>${responseLabel?`<span class="response-time-label">${esc(responseLabel)}</span>`:''}</div></div>`;
+  return `<div class="job-card ${isInProgress(r)?'in-progress':''}" data-open="${r._row}"><div class="co">${esc(r.Company)}</div><div class="rl">${esc(r.Role)}</div><div class="meta"><span>${statusBadge(r.Status)}</span><span>${esc(meta)}</span>${responseLabel?`<span class="response-time-label">${esc(responseLabel)}</span>`:''}</div></div>`;
 }
 
 appTable=function(){
   const rows=filteredRows();
   const response=averageResponseTime();
   const metric=response.average===null?'—':`${response.average.toFixed(1)} days`;
-  return `<div class="response-summary card"><span class="eyebrow">Average response time</span><strong>${metric}</strong><span class="kpi-sub">${response.count} rejected applications with deadlines; excludes missing deadlines</span></div>${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Response time</th><th>Deadline</th><th>Job ID</th><th>Contact</th><th>Links</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr class="${needsFollowUp(r)?'follow-up-app-row':''}" data-open="${r._row}"><td>${statusBadge(r.Status)}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${(()=>{const t=responseTiming(r);return t?esc(t.kind==='pending'?(t.days>=0?`${t.days}d waiting`:`${Math.abs(t.days)}d until deadline`):`${t.days}d`):'—'})()}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(r['Job ID'])}</td><td>${esc(r.Contact||r['Contact email'])}</td><td><div class="link-row">${usefulLinks(r).slice(0,5).map(([l,u])=>u?`<a class="mini-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`:'').join('')}</div></td><td class="row-chevron">›</td></tr>`).join('')||`<tr><td colspan="10"><div class="empty">No applications match these filters.</div></td></tr>`}</tbody></table></div>${rows.length?`<div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. Deadline sorting is the default.</div>`:''}`;
+  return `<div class="response-summary card"><span class="eyebrow">Average response time</span><strong>${metric}</strong><span class="kpi-sub">${response.count} rejected applications with deadlines; excludes missing deadlines</span></div>${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Response time</th><th>Deadline</th><th>Job ID</th><th>Contact</th><th>Links</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr class="${isInProgress(r)?'in-progress-app-row':''}" data-open="${r._row}"><td>${statusBadge(r.Status)}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${(()=>{const t=responseTiming(r);return t?esc(t.kind==='pending'?(t.days>=0?`${t.days}d waiting`:`${Math.abs(t.days)}d until deadline`):`${t.days}d`):'—'})()}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(r['Job ID'])}</td><td>${esc(r.Contact||r['Contact email'])}</td><td><div class="link-row">${usefulLinks(r).slice(0,5).map(([l,u])=>u?`<a class="mini-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`:'').join('')}</div></td><td class="row-chevron">›</td></tr>`).join('')||`<tr><td colspan="10"><div class="empty">No applications match these filters.</div></td></tr>`}</tbody></table></div>${rows.length?`<div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. Deadline sorting is the default.</div>`:''}`;
 };
 
 function compactStatusBreakdown(){
@@ -79,14 +78,14 @@ function overview(){
   const rejected=state.rows.filter(r=>r.Status==='Rejected').length;
   const response=averageResponseTime();
   const avgResponse=response.average===null?'—':response.average.toFixed(1);
-  const followUps=followUpRows();
+  const inProgress=inProgressRows();
   const cm={};state.rows.forEach(r=>{if(r.Company)cm[r.Company]=(cm[r.Company]||0)+1});
   const topCompanies=Object.entries(cm).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const att=attentionItems();
-  return `${pageHead('Overview','Application activity, follow-ups, status, organisation concentration and upcoming deadlines.')}
-  <section class="overview-focus"><div class="card"><div class="eyebrow">Applied</div><div class="kpi-value">${applied}</div><div class="kpi-sub">Submitted applications</div></div><div class="card"><div class="eyebrow">Prepared</div><div class="kpi-value">${c.prepared}</div><div class="kpi-sub">Ready to submit</div></div><div class="card"><div class="eyebrow">Follow up</div><div class="kpi-value">${followUps.length}</div><div class="kpi-sub">Applied 7+ days ago and still active</div></div><div class="card"><div class="eyebrow">Rejected</div><div class="kpi-value">${rejected}</div><div class="kpi-sub">Closed as rejected</div></div><div class="card"><div class="eyebrow">Average response time</div><div class="kpi-value">${avgResponse}${response.average!==null?'d':''}</div><div class="kpi-sub">${response.count} rejected records with deadlines</div></div></section>
+  return `${pageHead('Overview','Application activity, in-progress applications, status, organisation concentration and upcoming deadlines.')}
+  <section class="overview-focus"><div class="card"><div class="eyebrow">Applied</div><div class="kpi-value">${applied}</div><div class="kpi-sub">Submitted applications</div></div><div class="card"><div class="eyebrow">Prepared</div><div class="kpi-value">${c.prepared}</div><div class="kpi-sub">Ready to submit</div></div><div class="card"><div class="eyebrow">In Progress</div><div class="kpi-value">${inProgress.length}</div><div class="kpi-sub">More than 15 days after deadline; still active</div></div><div class="card"><div class="eyebrow">Rejected</div><div class="kpi-value">${rejected}</div><div class="kpi-sub">Closed as rejected</div></div><div class="card"><div class="eyebrow">Average response time</div><div class="kpi-value">${avgResponse}${response.average!==null?'d':''}</div><div class="kpi-sub">${response.count} rejected records with deadlines</div></div></section>
   <section class="grid" style="grid-template-columns:minmax(0,1.55fr) minmax(250px,.72fr) minmax(0,1.08fr);margin-top:18px"><div class="card"><div class="section-title"><div><h3>Application activity</h3><p>Submissions by week.</p></div></div>${lineChart(weeklySeries())}</div><div class="card"><div class="section-title"><div><h3>Status distribution</h3><p>Current status mix by percentage.</p></div></div>${compactStatusBreakdown()}</div><div class="card"><div class="section-title"><div><h3>Most targeted organisations</h3><p>Share of applications among the ten most frequent organisations.</p></div></div>${treemap(topCompanies)}</div></section>
-  <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Dashboard insights</h3><p>Follow-ups, deadlines and data checks.</p></div></div>${att.length?att.map(([t,r])=>`<div class="attention-row" data-open="${r._row}"><strong>${esc(t)}</strong><div>${esc(r.Company)} · ${esc(r.Role)}</div><span class="row-chevron">›</span></div>`).join(''):`<div class="notice">Nothing needs immediate attention.</div>`}</section>
+  <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Dashboard insights</h3><p>In-progress applications, deadlines and data checks.</p></div></div>${att.length?att.map(([t,r])=>`<div class="attention-row" data-open="${r._row}"><strong>${esc(t)}</strong><div>${esc(r.Company)} · ${esc(r.Role)}</div><span class="row-chevron">›</span></div>`).join(''):`<div class="notice">Nothing needs immediate attention.</div>`}</section>
   <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Next prepared applications</h3><p>Missing deadlines first, then earliest closing dates.</p></div><button class="btn soft" data-goto="deadlines">View all</button></div><div class="deadline-list">${deadlineRows().map(deadlineMarkup).join('')||`<div class="empty">No prepared applications in this workbook.</div>`}</div></section>`;
 }
 
