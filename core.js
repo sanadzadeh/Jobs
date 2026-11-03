@@ -19,21 +19,29 @@ function calendarDaysBetween(start,end){
   const day=d=>Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000;
   return Math.round(day(b)-day(a));
 }
+// Column T is authoritative when the exported workbook includes its calculated value.
+// A blank or non-numeric cell falls back to the equivalent 45-day rule.
 function responseTiming(r){
   if(!r.Company||r.Status==='Prepared')return null;
   const deadline=dateFrom(r.Deadline);
   if(!deadline)return null;
+  const kind=r.Status==='Rejected'?'rejected':'pending';
+  const source=r['Response time (days)'];
+  if(source!==null&&source!==undefined&&String(source).trim()!==''){
+    const days=typeof source==='number'?source:Number(String(source).trim().replace(/,/g,''));
+    if(Number.isFinite(days))return {days,kind,source:'spreadsheet'};
+  }
   const bounded=n=>Math.min(45,Math.max(0,n));
-  if(r.Status==='Rejected'){
-    if(r['Manual status']!=='Rejected')return {days:45,kind:'rejected'};
+  if(kind==='rejected'){
+    if(r['Manual status']!=='Rejected')return {days:45,kind,source:'fallback'};
     const outcome=dateFrom(r['Manual last update']);
-    if(!outcome)return {days:45,kind:'rejected'};
+    if(!outcome)return {days:45,kind,source:'fallback'};
     const applied=dateFrom(r['Applied date']);
     const start=applied&&outcome<deadline?applied:deadline;
-    return {days:bounded(calendarDaysBetween(start,outcome)),kind:'rejected'};
+    return {days:bounded(calendarDaysBetween(start,outcome)),kind,source:'fallback'};
   }
   if(dateFrom(r['Applied date']))
-    return {days:bounded(calendarDaysBetween(deadline,new Date())),kind:'pending'};
+    return {days:bounded(calendarDaysBetween(deadline,new Date())),kind,source:'fallback'};
   return null;
 }
 function averageResponseTime(){
