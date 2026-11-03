@@ -120,7 +120,7 @@ openDrawer=function(rowNo){
   const r=state.rows.find(x=>x._row===rowNo);if(!r)return;
   document.getElementById('drawerTitle').textContent=r.Role||'Application';
   document.getElementById('drawerSub').textContent=[r.Company,r['Job ID']].filter(Boolean).join(' · ');
-  const detail=[['Status',statusBadge(r.Status)],['Applied',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Contact',esc(r.Contact||'—')],['Email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}">${esc(r['Contact email'])}</a>`:'—']];
+  const detail=[['Status',statusBadge(r.Status)],['Applied',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Response time',esc((()=>{const t=responseTiming(r);if(!t)return '—';return t.kind==='pending'?(t.days>=0?`${t.days} days waiting`:`${Math.abs(t.days)} days until deadline`):`${t.days} days from deadline`})())],['Contact',esc(r.Contact||'—')],['Email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}">${esc(r['Contact email'])}</a>`:'—']];
   document.getElementById('drawerBody').innerHTML=`<div class="detail-grid">${detail.map(([l,v])=>`<div class="detail"><label>${l}</label><div>${v}</div></div>`).join('')}</div><div class="drawer-links">${actionMarkup(r)}</div><div class="eyebrow">Notes</div><div class="notes">${esc(r.Notes||'No notes recorded.')}</div>`;
   document.getElementById('drawer').classList.add('open');document.getElementById('drawerBackdrop').classList.add('open');
 };
