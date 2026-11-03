@@ -10,9 +10,9 @@ function dateFrom(v){if(!v)return null;if(v instanceof Date&&!isNaN(v))return ne
 function fmtDate(v){const d=dateFrom(v);return d?d.toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'}):''}
 function daysUntil(v){const d=dateFrom(v);if(!d)return null;const a=new Date();a.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.ceil((d-a)/86400000)}
 
-// Response time is measured against the advertised or recorded deadline.
-// Confirmed rejections use manual last update; automatically aged rejections
-// use manual last update + 30 days. Active applications show waiting time.
+// Mirror column T of the Google Sheets register: 45-day cap.
+// Rejections before the deadline use application-to-response days;
+// later rejections use deadline-to-response days.
 function calendarDaysBetween(start,end){
   const a=dateFrom(start),b=dateFrom(end);
   if(!a||!b)return null;
@@ -20,18 +20,20 @@ function calendarDaysBetween(start,end){
   return Math.round(day(b)-day(a));
 }
 function responseTiming(r){
-  if(r.Status==='Prepared')return null;
+  if(!r.Company||r.Status==='Prepared')return null;
   const deadline=dateFrom(r.Deadline);
   if(!deadline)return null;
+  const bounded=n=>Math.min(45,Math.max(0,n));
   if(r.Status==='Rejected'){
-    if(r['Manual status']!=='Rejected')
-      return {days:30,kind:'rejected'}; // Automatic closure: deadline + 30 calendar days.
-    const outcome=dateFrom(r['Manual last update'])||dateFrom(r['Last update']);
-    if(!outcome)return null;
-    return {days:calendarDaysBetween(deadline,outcome),kind:'rejected'};
+    if(r['Manual status']!=='Rejected')return {days:45,kind:'rejected'};
+    const outcome=dateFrom(r['Manual last update']);
+    if(!outcome)return {days:45,kind:'rejected'};
+    const applied=dateFrom(r['Applied date']);
+    const start=applied&&outcome<deadline?applied:deadline;
+    return {days:bounded(calendarDaysBetween(start,outcome)),kind:'rejected'};
   }
-  if(ACTIVE.has(r.Status)&&dateFrom(r['Applied date']))
-    return {days:calendarDaysBetween(deadline,new Date()),kind:'pending'};
+  if(dateFrom(r['Applied date']))
+    return {days:bounded(calendarDaysBetween(deadline,new Date())),kind:'pending'};
   return null;
 }
 function averageResponseTime(){
