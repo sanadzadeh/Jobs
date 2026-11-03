@@ -68,10 +68,35 @@ appTable=function(){
 };
 
 function compactStatusBreakdown(){
-  const entries=statusEntries(),total=entries.reduce((n,x)=>n+x[1],0)||1,gradient=conicGradient(entries,total);
-  return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:230px"><div style="display:grid;place-items:center"><div title="Status distribution" style="width:108px;aspect-ratio:1;border-radius:50%;background:${gradient};display:grid;place-items:center;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--border) 55%,transparent)"><div style="width:62px;aspect-ratio:1;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;box-shadow:0 0 0 1px var(--border)"><div><strong style="display:block;font:600 1.15rem/1 var(--serif)">${total}</strong><span style="display:block;margin-top:3px;font:400 .47rem var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)">records</span></div></div></div></div><div class="legend" style="margin-top:14px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;max-width:100%;min-width:0">${entries.map(([k,v],i)=>{const pct=total?Math.round(v/total*100):0,color=STATUS_COLORS[k]||['var(--accent)','var(--prepared)','var(--good)','var(--warn)','var(--risk)','var(--ink-3)'][i%6];return `<span title="${esc(k)}" style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><i style="background:${color};border-radius:50%"></i><span>${esc(shortStatus(k))}</span><strong style="color:var(--ink);font:600 .61rem var(--mono)">${pct}%</strong></span>`}).join('')}</div></div>`;
+  const entries=statusEntries(),total=entries.reduce((n,x)=>n+x[1],0)||1;
+  const gradient=conicGradient(entries,total);
+  // The textured slice remains INSIDE the existing Applied segment.
+  // Only Applied rows count here, so the donut's totals are unchanged.
+  const applied=entries.find(([k])=>k==='Applied')?.[1]||0;
+  const inProgressApplied=state.rows.filter(r=>r.Status==='Applied'&&isInProgress(r)).length;
+  const beforeApplied=entries.slice(0,entries.findIndex(([k])=>k==='Applied')).reduce((n,[,v])=>n+v,0);
+  const circumference=2*Math.PI*76;
+  const textureStart=circumference*(beforeApplied+applied-inProgressApplied)/total;
+  const textureLength=circumference*inProgressApplied/total;
+  const overlay=inProgressApplied>0?`<svg viewBox="0 0 200 200" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+    <defs><pattern id="inprogress-donut-dots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.55" fill="white" fill-opacity=".9"/></pattern></defs>
+    <circle cx="100" cy="100" r="76" fill="none" stroke="url(#inprogress-donut-dots)" stroke-width="44" stroke-dasharray="${textureLength} ${circumference-textureLength}" stroke-dashoffset="${-textureStart}" transform="rotate(-90 100 100)"/>
+  </svg>`:'';
+  return `<div style="display:flex;flex-direction:column;justify-content:space-between;align-items:center;min-height:290px;width:100%;gap:17px">
+    <div title="Status distribution" style="position:relative;width:min(200px,100%);aspect-ratio:1;border-radius:50%;background:${gradient};box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--border) 55%,transparent);display:grid;place-items:center;flex-shrink:0">
+      ${overlay}
+      <div style="z-index:1;width:54%;aspect-ratio:1;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;box-shadow:0 0 0 1px var(--border)">
+        <div><strong style="display:block;font:600 1.6rem/1 var(--serif)">${total}</strong><span style="display:block;margin-top:5px;font:400 .57rem var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)">records</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;margin-top:auto">
+      <div class="legend" style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;max-width:100%;min-width:0">
+      ${entries.map(([k,v],i)=>{const pct=Math.round(v/total*100),color=STATUS_COLORS[k]||['var(--accent)','var(--prepared)','var(--good)','var(--warn)','var(--risk)','var(--ink-3)'][i%6];return `<span title="${esc(k)}" style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><i style="background:${color};border-radius:50%"></i><span>${esc(shortStatus(k))}</span><strong style="color:var(--ink);font:600 .61rem var(--mono)">${pct}%</strong></span>`}).join('')}
+      </div>
+      ${inProgressApplied>0?`<div title="Subset of Applied, not an additional status" style="display:flex;align-items:center;gap:7px;font:400 .64rem var(--mono);color:var(--ink-2)"><span style="width:13px;height:13px;border-radius:3px;background-color:var(--accent);background-image:radial-gradient(circle,rgba(255,255,255,.9) 1px,transparent 1.2px);background-size:5px 5px"></span>In Progress · ${inProgressApplied} of ${applied} Applied</div>`:''}
+    </div>
+  </div>`;
 }
-
 function overview(){
   const c=counts();
   const applied=state.rows.filter(r=>r['Applied date']).length;
