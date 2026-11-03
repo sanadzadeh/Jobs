@@ -136,7 +136,7 @@ appTable=function(){
     const days=elapsed===null?'—':String(elapsed);
     const status=progress&&r.Status==='Applied'?`<span class="badge b-good">${esc(r.Status)}</span>`:r.Status==='Rejected'&&r['Manual status']!=='Rejected'?`${statusBadge(r.Status)}<span title="Automatically classified 45 days after the deadline without a confirmed employer outcome" style="display:block;font-size:.62rem;margin-top:4px">Automatic</span>`:statusBadge(r.Status);
     return `<tr class="${progress?'in-progress-app-row':''}" data-open="${r._row}"><td>${status}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(label)}</td><td class="${progress?'in-progress-days':''}">${esc(days)}</td><td>${esc(r.Contact||'')}</td><td><div class="linkrow" onclick="event.stopPropagation()">${actionMarkup(r,6)}</div></td><td class="row-chevron">›</td></tr>`;
-  }).join('')}</tbody></table>${rows.length?'':'<div class="empty">No applications match these filters.</div>'}</div><div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. In Progress is more than 15 days after deadline with an active status.</div>`;
+  }).join('')}</tbody></table>${rows.length?'':'<div class="empty">No applications match these filters.</div>'}</div><div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. In Progress is more than 20 days after deadline with an active status.</div>`;
 };
 function documents(){
   const rows=filteredDocumentRows(),r=currentDocumentRow();
