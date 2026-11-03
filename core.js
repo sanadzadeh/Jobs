@@ -9,6 +9,36 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 function dateFrom(v){if(!v)return null;if(v instanceof Date&&!isNaN(v))return new Date(v);if(typeof v==='number'){const o=XLSX.SSF.parse_date_code(v);return o?new Date(o.y,o.m-1,o.d):null}const s=String(v).trim();const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);const d=new Date(s);return isNaN(d)?null:d}
 function fmtDate(v){const d=dateFrom(v);return d?d.toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'}):''}
 function daysUntil(v){const d=dateFrom(v);if(!d)return null;const a=new Date();a.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.ceil((d-a)/86400000)}
+
+// Response time is measured against the advertised or recorded deadline.
+// Confirmed rejections use manual last update; automatically aged rejections
+// use manual last update + 30 days. Active applications show waiting time.
+function calendarDaysBetween(start,end){
+  const a=dateFrom(start),b=dateFrom(end);
+  if(!a||!b)return null;
+  const day=d=>Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000;
+  return Math.round(day(b)-day(a));
+}
+function responseTiming(r){
+  if(r.Status==='Prepared')return null;
+  const deadline=dateFrom(r.Deadline);
+  if(!deadline)return null;
+  if(r.Status==='Rejected'){
+    const manualDate=dateFrom(r['Manual last update']);
+    const outcome=manualDate?new Date(manualDate):dateFrom(r['Last update']);
+    if(!outcome)return null;
+    if(r['Manual status']!=='Rejected'&&manualDate)outcome.setDate(outcome.getDate()+30);
+    return {days:calendarDaysBetween(deadline,outcome),kind:'rejected'};
+  }
+  if(ACTIVE.has(r.Status)&&dateFrom(r['Applied date']))
+    return {days:calendarDaysBetween(deadline,new Date()),kind:'pending'};
+  return null;
+}
+function averageResponseTime(){
+  const durations=state.rows.filter(r=>r.Status==='Rejected').map(responseTiming).filter(x=>x&&Number.isFinite(x.days)).map(x=>x.days);
+  return {count:durations.length,average:durations.length?durations.reduce((a,b)=>a+b,0)/durations.length:null};
+}
+
 function keyNorm(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ')}
 function statusClass(s){if(s==='Prepared')return'b-prepared';if(['Applied','Under review'].includes(s))return'b-active';if(['Interview completed','Talent pool / EOI','CV acknowledged'].includes(s))return'b-good';if(s==='No outcome found')return'b-warn';if(CLOSED.has(s))return'b-closed';return'b-neutral'}
 function statusBadge(s){return `<span class="badge ${statusClass(s)}">${esc(s||'Unknown')}</span>`}
@@ -50,7 +80,6 @@ function parseWorkbook(buf,sourceLabel){
       if(url)row._links[h]=url;
     });
     if(!String(row.Company||'').trim()&&!String(row.Role||'').trim())continue;
-    if(row.Status!=='Prepared'&&row['Applied date'])row.Deadline=row['Applied date'];
     rows.push(row);
   }
   if(!rows.length)throw new Error('The register was found, but it contains no application rows.');
@@ -93,7 +122,7 @@ function filteredRows(){const q=keyNorm(state.filter);let x=state.rows.filter(r=
 function counts(){const c={total:state.rows.length,prepared:0,active:0,interviews:0,rejected:0};state.rows.forEach(r=>{if(r.Status==='Prepared')c.prepared++;if(ACTIVE.has(r.Status))c.active++;if(r.Status==='Interview completed')c.interviews++;if(r.Status==='Rejected')c.rejected++});return c}
 function sourceInfo(){const c=counts();return `<strong>${esc(state.source||'No workbook')}</strong>${state.loadedAt?`Loaded ${state.loadedAt.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'})}`:''}<br>${c.total} records · ${esc(state.sheet||'—')}`}
 function renderSidebar(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Views</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">0${i+1}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<a class="nav sidebar-link" href="https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit" target="_blank" rel="noopener"><span class="nav-num">↗</span><span class="nav-label">Google Sheet</span></a><div class="side-meta">${sourceInfo()}</div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()})}
-function openDrawer(rowNo){const r=state.rows.find(x=>x._row===rowNo);if(!r)return;document.getElementById('drawerTitle').textContent=r.Role||'Application';document.getElementById('drawerSub').textContent=[r.Company,r['Job ID']].filter(Boolean).join(' · ');const detail=[['Status',statusBadge(r.Status)],['Applied',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Contact',esc(r.Contact||'—')],['Email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}">${esc(r['Contact email'])}</a>`:'—']];document.getElementById('drawerBody').innerHTML=`<div class="detail-grid">${detail.map(([l,v])=>`<div class="detail"><label>${l}</label><div>${v}</div></div>`).join('')}</div><div class="drawer-links">${usefulLinks(r).map(([l,u])=>`<a class="mini-link action-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`).join('')}</div><div class="eyebrow">Notes</div><div class="notes">${esc(r.Notes||'No notes recorded.')}</div>`;document.getElementById('drawer').classList.add('open');document.getElementById('drawerBackdrop').classList.add('open')}
+function openDrawer(rowNo){const r=state.rows.find(x=>x._row===rowNo);if(!r)return;document.getElementById('drawerTitle').textContent=r.Role||'Application';document.getElementById('drawerSub').textContent=[r.Company,r['Job ID']].filter(Boolean).join(' · ');const detail=[['Status',statusBadge(r.Status)],['Applied',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Response time',esc((()=>{const t=responseTiming(r);return !t?'—':t.kind==='pending'?t.days>=0?t.days+' days waiting':Math.abs(t.days)+' days until deadline':t.days+' days from deadline'})())],['Contact',esc(r.Contact||'—')],['Email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}">${esc(r['Contact email'])}</a>`:'—']];document.getElementById('drawerBody').innerHTML=`<div class="detail-grid">${detail.map(([l,v])=>`<div class="detail"><label>${l}</label><div>${v}</div></div>`).join('')}</div><div class="drawer-links">${usefulLinks(r).map(([l,u])=>`<a class="mini-link action-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`).join('')}</div><div class="eyebrow">Notes</div><div class="notes">${esc(r.Notes||'No notes recorded.')}</div>`;document.getElementById('drawer').classList.add('open');document.getElementById('drawerBackdrop').classList.add('open')}
 function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerBackdrop').classList.remove('open')}
 function exportCsv(){const rows=filteredRows(),cols=['Applied date','Company','Role','Job ID','Status','Last update','Contact','Contact email','Deadline','Notes'];const q=v=>`"${String(v??'').replace(/"/g,'""')}"`,csv=[cols.map(q).join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='job-applications-filtered.csv';a.click();URL.revokeObjectURL(a.href)}
 
