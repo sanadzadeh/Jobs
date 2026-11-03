@@ -24,10 +24,10 @@ function responseTiming(r){
   const deadline=dateFrom(r.Deadline);
   if(!deadline)return null;
   if(r.Status==='Rejected'){
-    const manualDate=dateFrom(r['Manual last update']);
-    const outcome=manualDate?new Date(manualDate):dateFrom(r['Last update']);
+    if(r['Manual status']!=='Rejected')
+      return {days:30,kind:'rejected'}; // Automatic closure: deadline + 30 calendar days.
+    const outcome=dateFrom(r['Manual last update'])||dateFrom(r['Last update']);
     if(!outcome)return null;
-    if(r['Manual status']!=='Rejected'&&manualDate)outcome.setDate(outcome.getDate()+30);
     return {days:calendarDaysBetween(deadline,outcome),kind:'rejected'};
   }
   if(ACTIVE.has(r.Status)&&dateFrom(r['Applied date']))
