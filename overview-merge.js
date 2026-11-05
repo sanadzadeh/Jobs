@@ -9,12 +9,12 @@ function renderSidebar(){
 const inProgressStyle=document.createElement('style');
 inProgressStyle.textContent=`
   .overview-focus{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-bottom:11px}
-  .applied-main-card{position:relative;min-height:94px;padding-right:105px}
+  .applied-main-card{position:relative;min-height:94px;padding-right:145px}
   .applied-totals{display:block}
-  .applied-breakdown{position:absolute;right:18px;top:12px;bottom:12px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:7px}
-  .applied-breakdown-item{display:flex;flex-direction:column;gap:2px}
-  .applied-breakdown-item strong{font:600 1.05rem/1 var(--serif)}
-  .applied-breakdown-item span{font:400 .62rem var(--mono)}
+  .applied-breakdown{position:absolute;right:14px;top:16px;bottom:16px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px}
+  .applied-breakdown-item{display:flex;flex-direction:row;align-items:baseline;gap:8px;white-space:nowrap}
+  .applied-breakdown-item strong{font:600 1.45rem/1 var(--serif)}
+  .applied-breakdown-item span{font:500 .78rem/1.2 var(--mono)}
   .applied-breakdown-item.live{color:var(--good)}
   .applied-breakdown-item.rejected{color:var(--risk)}
   .response-summary{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
