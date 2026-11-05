@@ -118,9 +118,13 @@ parseWorkbook=function(buf,sourceLabel){
 
 openDrawer=function(rowNo){
   const r=state.rows.find(x=>x._row===rowNo);if(!r)return;
+  const notes=String(r.Notes||'');
+  const salaryMatch=notes.match(/\b(?:salary(?:\s*\/\s*daily\s+rate)?\s+requested|requested\s+salary|rate\s+requested)\s*:\s*([^\n.;]+)/i);
+  const requestedSalary=salaryMatch?salaryMatch[1].trim():'Not recorded';
+  const advertisedMatch=notes.match(/\b(?:advertised\s+(?:salary|rate|remuneration)|salary\s+range|advertised\s+pay)\s*:\s*([^\n.;]+)/i);
   document.getElementById('drawerTitle').textContent=r.Role||'Application';
   document.getElementById('drawerSub').textContent=[r.Company,r['Job ID']].filter(Boolean).join(' · ');
-  const detail=[['Status',r.Status==='Rejected'&&r['Manual status']!=='Rejected'?`${statusBadge(r.Status)} <span title="Automatically classified 45 days after the deadline without an employer outcome">(automatic, unconfirmed)</span>`:statusBadge(r.Status)],['Applied',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Response time',esc((()=>{const t=responseTiming(r);if(!t)return '—';return t.kind==='pending'?(t.days>=0?`${t.days} days waiting`:`${Math.abs(t.days)} days until deadline`):`${t.days} days (45-day maximum)`})())],['Contact',esc(r.Contact||'—')],['Email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}">${esc(r['Contact email'])}</a>`:'—']];
+  const detail=[['Requested salary',esc(requestedSalary)],...(advertisedMatch?[['Advertised pay',esc(advertisedMatch[1].trim())]]:[]),['Job reference',esc(r['Job ID']||'—')],['Status',r.Status==='Rejected'&&r['Manual status']!=='Rejected'?`${statusBadge(r.Status)} <span title="Automatically classified 45 days after the deadline without an employer outcome">(automatic, unconfirmed)</span>`:statusBadge(r.Status)],['Applied',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Response time',esc((()=>{const t=responseTiming(r);if(!t)return '—';return t.kind==='pending'?(t.days>=0?`${t.days} days waiting`:`${Math.abs(t.days)} days until deadline`):`${t.days} days (45-day maximum)`})())],['Contact',esc(r.Contact||'—')],['Email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}">${esc(r['Contact email'])}</a>`:'—']];
   document.getElementById('drawerBody').innerHTML=`<div class="detail-grid">${detail.map(([l,v])=>`<div class="detail"><label>${l}</label><div>${v}</div></div>`).join('')}</div><div class="drawer-links">${actionMarkup(r)}</div><div class="eyebrow">Notes</div><div class="notes">${esc(r.Notes||'No notes recorded.')}</div>`;
   document.getElementById('drawer').classList.add('open');document.getElementById('drawerBackdrop').classList.add('open');
 };
