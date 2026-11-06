@@ -113,6 +113,7 @@ function categorySummary(){
   source.forEach(r=>{const cat=JOB_CATEGORIES.includes(r['Job Category'])?r['Job Category']:'Other';counts[cat]++});
   return JOB_CATEGORIES.map(k=>[k,counts[k]]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
 }
+document.addEventListener('change',e=>{if(e.target && e.target.id==='categoryStatusFilter'){categoryStatusFilter=e.target.value;render()}});
 function categoryStatusGrid(){
   const statuses=['Applied','Rejected','Prepared'];
   const items=JOB_CATEGORIES.map(cat=>{
