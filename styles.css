@@ -5,10 +5,10 @@
 
 /* In-progress texture is restricted to treemap tiles and follows their palette. */
 .category-progress-dots{
-  --category-dot-shade:color-mix(in srgb,var(--tile-color) 68%,black);
+  --category-dot-shade:color-mix(in srgb,var(--tile-color) 45%,var(--surface));
   background-image:radial-gradient(circle,var(--category-dot-shade) 1.6px,transparent 1.85px);
   background-size:6px 6px;
 }
 :root[data-theme="dark"] .category-progress-dots{
-  --category-dot-shade:color-mix(in srgb,var(--tile-color) 68%,white);
+  --category-dot-shade:color-mix(in srgb,var(--tile-color) 55%,var(--surface));
 }
