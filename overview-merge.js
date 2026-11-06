@@ -105,6 +105,25 @@ function compactStatusBreakdown(){
     </div>
   </div>`;
 }
+let categoryStatusFilter='All';
+const JOB_CATEGORIES=['Strategy','Analytics','AI','Financial Crime & Risk','Other'];
+function categorySummary(){
+  const source=state.rows.filter(r=>categoryStatusFilter==='All'||r.Status===categoryStatusFilter);
+  const counts=Object.fromEntries(JOB_CATEGORIES.map(k=>[k,0]));
+  source.forEach(r=>{const cat=JOB_CATEGORIES.includes(r['Job Category'])?r['Job Category']:'Other';counts[cat]++});
+  return JOB_CATEGORIES.map(k=>[k,counts[k]]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+}
+function categoryStatusGrid(){
+  const statuses=['Applied','Rejected','Prepared'];
+  const items=JOB_CATEGORIES.map(cat=>{
+    const matches=state.rows.filter(r=>(JOB_CATEGORIES.includes(r['Job Category'])?r['Job Category']:'Other')===cat);
+    return {cat,counts:statuses.map(status=>matches.filter(r=>r.Status===status).length)};
+  });
+  return `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px;font-size:.65rem">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) repeat(3,39px);gap:5px;color:var(--ink-3);font:500 .56rem var(--mono);text-transform:uppercase;letter-spacing:.02em;margin-bottom:5px"><span>Category</span><span title="Applied">Appl.</span><span title="Rejected">Rej.</span><span title="Prepared">Prep.</span></div>
+    ${items.map(x=>`<div style="display:grid;grid-template-columns:minmax(0,1fr) repeat(3,39px);gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid var(--border)"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(x.cat)}">${esc(x.cat)}</span>${x.counts.map(v=>`<span class="num" style="text-align:center">${v}</span>`).join('')}</div>`).join('')}
+    </div>`;
+}
 function overview(){
   const c=counts();
   const applied=state.rows.filter(r=>r['Applied date']).length;
@@ -113,12 +132,11 @@ function overview(){
   const response=averageResponseTime();
   const avgResponse=response.average===null?'—':response.average.toFixed(1);
   const inProgress=inProgressRows();
-  const cm={};state.rows.forEach(r=>{if(r.Company)cm[r.Company]=(cm[r.Company]||0)+1});
-  const topCompanies=Object.entries(cm).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const categoryCounts=categorySummary();
   const att=attentionItems();
-  return `${pageHead('Overview','Application activity, in-progress applications, status, organisation concentration and upcoming deadlines.')}
+  return `${pageHead('Overview','Application activity, in-progress applications, status, job categories and upcoming deadlines.')}
   <section class="overview-focus"><div class="card applied-main-card"><div class="eyebrow">Applied</div><div class="applied-totals"><div class="kpi-value">${applied}</div><div class="applied-breakdown"><div class="applied-breakdown-item live"><strong>${live}</strong><span>Live</span></div><div class="applied-breakdown-item rejected"><strong>${rejected}</strong><span>Rejected</span></div></div></div><div class="kpi-sub">Submitted applications</div></div><div class="card"><div class="eyebrow">Prepared</div><div class="kpi-value">${c.prepared}</div><div class="kpi-sub">Ready to submit</div></div><div class="card"><div class="eyebrow">In Progress</div><div class="kpi-value">${inProgress.length}</div><div class="kpi-sub">More than 20 days after deadline; still active</div></div><div class="card"><div class="eyebrow">Average response time</div><div class="kpi-value">${avgResponse}${response.average!==null?'d':''}</div><div class="kpi-sub">${response.count} rejected records with deadlines</div></div></section>
-  <section class="grid" style="grid-template-columns:minmax(0,1.55fr) minmax(250px,.72fr) minmax(0,1.08fr);margin-top:18px"><div class="card"><div class="section-title"><div><h3>Application activity</h3><p>Submissions by week.</p></div></div>${lineChart(weeklySeries())}</div><div class="card"><div class="section-title"><div><h3>Status distribution</h3><p>Current status mix by percentage.</p></div></div>${compactStatusBreakdown()}</div><div class="card"><div class="section-title"><div><h3>Most targeted organisations</h3><p>Share of applications among the ten most frequent organisations.</p></div></div>${treemap(topCompanies)}</div></section>
+  <section class="grid" style="grid-template-columns:minmax(0,1.55fr) minmax(250px,.72fr) minmax(0,1.08fr);margin-top:18px"><div class="card"><div class="section-title"><div><h3>Application activity</h3><p>Submissions by week.</p></div></div>${lineChart(weeklySeries())}</div><div class="card"><div class="section-title"><div><h3>Status distribution</h3><p>Current status mix by percentage.</p></div></div>${compactStatusBreakdown()}</div><div class="card"><div class="section-title"><div><h3>Job categories</h3><p>Application mix by primary role focus.</p></div><select id="categoryStatusFilter" aria-label="Filter categories by application status" style="max-width:114px;min-width:0;padding:5px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);font-size:.69rem">${['All','Applied','Rejected','Prepared'].map(s=>`<option value="${s}" ${categoryStatusFilter===s?'selected':''}>${s==='All'?'All statuses':s}</option>`).join('')}</select></div>${treemap(categoryCounts)}${categoryStatusGrid()}</div></section>
   <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Dashboard insights</h3><p>In-progress applications, deadlines and data checks.</p></div></div>${att.length?att.map(([t,r])=>`<div class="attention-row" data-open="${r._row}"><strong>${esc(t)}</strong><div>${esc(r.Company)} · ${esc(r.Role)}</div><span class="row-chevron">›</span></div>`).join(''):`<div class="notice">Nothing needs immediate attention.</div>`}</section>
   <section class="card" style="margin-top:18px"><div class="section-title"><div><h3>Next prepared applications</h3><p>Missing deadlines first, then earliest closing dates.</p></div><button class="btn soft" data-goto="deadlines">View all</button></div><div class="deadline-list">${deadlineRows().map(deadlineMarkup).join('')||`<div class="empty">No prepared applications in this workbook.</div>`}</div></section>`;
 }
