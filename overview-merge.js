@@ -75,6 +75,65 @@ appTable=function(){
   return `<div class="response-summary card"><span class="eyebrow">Average response time</span><strong>${metric}</strong><span class="kpi-sub">${response.count} rejected applications with deadlines; excludes missing deadlines</span></div>${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Response time</th><th>Deadline</th><th>Days since deadline</th><th>Contact</th><th>Links</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr class="${isInProgress(r)?'in-progress-app-row':''}" data-open="${r._row}"><td>${isInProgress(r)&&r.Status==='Applied'?'<span class="badge b-good">Applied</span>':statusBadge(r.Status)}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${(()=>{const t=responseTiming(r);return t?esc(t.kind==='pending'?(t.days>=0?`${t.days}d waiting`:`${Math.abs(t.days)}d until deadline`):`${t.days}d`):'—'})()}</td><td>${esc(fmtDate(r.Deadline))}</td><td class="${isInProgress(r)?'in-progress-days':''}">${(['Applied','Under review','Interview completed','No outcome found','CV acknowledged','Talent pool / EOI'].includes(r.Status)&&daysSinceDeadline(r)!==null)?esc(daysSinceDeadline(r)):'—'}</td><td>${esc(r.Contact||r['Contact email'])}</td><td><div class="link-row">${usefulLinks(r).slice(0,5).map(([l,u])=>u?`<a class="mini-link" href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}</a>`:'').join('')}</div></td><td class="row-chevron">›</td></tr>`).join('')||`<tr><td colspan="10"><div class="empty">No applications match these filters.</div></td></tr>`}</tbody></table></div>${rows.length?`<div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. Deadline sorting is the default.</div>`:''}`;
 };
 
+// The donut keeps the existing status shares. Hovering a slice reveals its category mix.
+let statusSliceTooltip=null,statusSliceName=null;
+function hideStatusSliceTooltip(){
+  if(statusSliceTooltip)statusSliceTooltip.remove();
+  statusSliceTooltip=null;statusSliceName=null;
+}
+function moveStatusSliceTooltip(event){
+  if(!statusSliceTooltip)return;
+  const w=statusSliceTooltip.offsetWidth,h=statusSliceTooltip.offsetHeight;
+  statusSliceTooltip.style.left=Math.max(8,Math.min(event.clientX+14,window.innerWidth-w-8))+'px';
+  statusSliceTooltip.style.top=Math.max(8,Math.min(event.clientY+14,window.innerHeight-h-8))+'px';
+}
+function showStatusSliceTooltip(status,event){
+  if(status===statusSliceName&&statusSliceTooltip){moveStatusSliceTooltip(event);return}
+  hideStatusSliceTooltip();
+  const all=state.rows.length;
+  const matching=state.rows.filter(row=>row.Status===status);
+  const total=matching.length;
+  const categories=typeof JOB_CATEGORIES!=='undefined'?JOB_CATEGORIES:['Strategy','Analytics','AI','Financial Crime & Risk','Other'];
+  const categoryCounts=Object.fromEntries(categories.map(k=>[k,0]));
+  matching.forEach(row=>{
+    const cat=categories.includes(row['Job Category'])?row['Job Category']:'Other';
+    categoryCounts[cat]++;
+  });
+  const tip=document.createElement('div');
+  tip.style.cssText='position:fixed;z-index:10000;pointer-events:none;min-width:207px;padding:11px 13px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);box-shadow:0 8px 25px rgba(0,0,0,.18);font-size:12px;line-height:1.75';
+  const heading=document.createElement('strong');
+  heading.textContent=status;
+  heading.style.cssText='display:block;font-size:13px;margin-bottom:4px';
+  tip.appendChild(heading);
+  const lines=[['Total',`${total} (${all?Math.round(total/all*100):0}% of all)`],...categories.map(cat=>[cat,`${categoryCounts[cat]} (${total?Math.round(categoryCounts[cat]/total*100):0}%)`])];
+  for(const [label,value] of lines){
+    const line=document.createElement('div');
+    line.style.cssText='display:flex;justify-content:space-between;align-items:baseline;gap:17px';
+    const l=document.createElement('span');l.textContent=label;
+    const v=document.createElement('strong');v.textContent=value;
+    line.append(l,v);tip.appendChild(line);
+  }
+  document.body.appendChild(tip);
+  statusSliceTooltip=tip;statusSliceName=status;
+  moveStatusSliceTooltip(event);
+}
+document.addEventListener('pointermove',event=>{
+  const donut=event.target.closest?.('[data-status-donut]');
+  if(!donut){hideStatusSliceTooltip();return}
+  const rect=donut.getBoundingClientRect();
+  const x=event.clientX-rect.left-rect.width/2,y=event.clientY-rect.top-rect.height/2;
+  const radius=Math.hypot(x,y),outer=Math.min(rect.width,rect.height)/2;
+  // Centre is not a status slice.
+  if(radius<outer*.54||radius>outer){hideStatusSliceTooltip();return}
+  const angle=(Math.atan2(x,-y)+2*Math.PI)%(2*Math.PI);
+  const entries=statusEntries(),sum=entries.reduce((a,e)=>a+e[1],0);
+  let cumulative=0;
+  for(const [status,count] of entries){
+    cumulative+=count/sum*2*Math.PI;
+    if(angle<=cumulative){showStatusSliceTooltip(status,event);return}
+  }
+  hideStatusSliceTooltip();
+});
 function compactStatusBreakdown(){
   const entries=statusEntries(),total=entries.reduce((n,x)=>n+x[1],0)||1;
   const gradient=conicGradient(entries,total);
@@ -91,7 +150,7 @@ function compactStatusBreakdown(){
     <circle cx="100" cy="100" r="76" fill="none" stroke="url(#inprogress-donut-dots)" stroke-width="44" stroke-dasharray="${textureLength} ${circumference-textureLength}" stroke-dashoffset="${-textureStart}" transform="rotate(-90 100 100)"/>
   </svg>`:'';
   return `<div style="display:flex;flex-direction:column;justify-content:space-between;align-items:center;min-height:290px;width:100%;gap:17px">
-    <div title="Status distribution" style="position:relative;width:min(200px,100%);aspect-ratio:1;border-radius:50%;background:${gradient};box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--border) 55%,transparent);display:grid;place-items:center;flex-shrink:0">
+    <div data-status-donut="true" aria-label="Status distribution. Hover over a slice to see categories." style="position:relative;width:min(200px,100%);aspect-ratio:1;border-radius:50%;background:${gradient};box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--border) 55%,transparent);display:grid;place-items:center;flex-shrink:0">
       ${overlay}
       <div style="z-index:1;width:54%;aspect-ratio:1;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;box-shadow:0 0 0 1px var(--border)">
         <div><strong style="display:block;font:600 1.6rem/1 var(--serif)">${total}</strong><span style="display:block;margin-top:5px;font:400 .57rem var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)">records</span></div>
