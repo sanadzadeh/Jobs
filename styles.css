@@ -2,3 +2,13 @@
 :root[data-theme="dark"] .drawer-backdrop{background:rgba(0,0,0,.55)}
 :root[data-theme="dark"] .drawer{box-shadow:none;border-left:1px solid var(--border)}
 :root[data-theme="dark"] .toast{background:var(--surface-deep);color:var(--ink);border:1px solid var(--border-2)}
+
+/* In-progress texture is restricted to treemap tiles and follows their palette. */
+.category-progress-dots{
+  --category-dot-shade:color-mix(in srgb,var(--tile-color) 68%,black);
+  background-image:radial-gradient(circle,var(--category-dot-shade) 1.6px,transparent 1.85px);
+  background-size:6px 6px;
+}
+:root[data-theme="dark"] .category-progress-dots{
+  --category-dot-shade:color-mix(in srgb,var(--tile-color) 68%,white);
+}
