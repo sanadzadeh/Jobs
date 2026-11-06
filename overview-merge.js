@@ -135,7 +135,7 @@ function showCategoryTooltip(tile,event){
   tip.style.cssText='position:fixed;z-index:9999;pointer-events:none;min-width:180px;padding:11px 13px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);box-shadow:0 8px 25px rgba(0,0,0,.18);font-size:12px;line-height:1.75';
   const heading=document.createElement('strong');heading.textContent=cat;heading.style.cssText='display:block;font-size:13px;margin-bottom:4px';
   tip.appendChild(heading);
-  [['% of total',`${state.rows.length?Math.round(b.total/state.rows.length*100):0}%`],['Rejected',b.rejected],['In progress',b.inProgress]].forEach(([label,n])=>{
+  [['% of total',`${state.rows.length?Math.round(b.total/state.rows.length*100):0}%`],['Rejected',`${b.rejected} (${b.total?Math.round(b.rejected/b.total*100):0}%)`],['In progress',`${b.inProgress} (${b.total?Math.round(b.inProgress/b.total*100):0}%)`]].forEach(([label,n])=>{
     const line=document.createElement('div');line.style.cssText='display:flex;justify-content:space-between;gap:22px';
     const l=document.createElement('span');l.textContent=label;
     const val=document.createElement('strong');val.textContent=n;
