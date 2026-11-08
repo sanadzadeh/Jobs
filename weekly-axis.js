@@ -53,16 +53,17 @@ function weeklyAxisLabel(iso){
 
 function lineChart(series){
   if(!series.length)return `<div class="empty">No dated applications yet.</div>`;
-  const W=650,H=235,pL=32,pR=12,pT=24,pB=42;
+  const W=650,H=235,pL=36,pR=12,pT=24,pB=42;
   const plotW=W-pL-pR,plotH=H-pT-pB;
   const max=Math.max(1,...series.flatMap(x=>[x[1],x[2]]));
   const step=plotW/series.length;
   const groupW=Math.min(36,step*.72),gap=3,barW=(groupW-gap)/2;
-  const y=v=>H-pB-(v/max)*plotH;
+  const scaledMax=Math.sqrt(max);
+  const y=v=>H-pB-(Math.sqrt(Math.max(0,v))/scaledMax)*plotH;
   const bars=series.map((x,i)=>{
     const cx=pL+step*i+step/2;
     const ax=cx-groupW/2,rx=ax+barW+gap;
-    const ah=(x[1]/max)*plotH,rh=(x[2]/max)*plotH;
+    const ah=(Math.sqrt(x[1])/scaledMax)*plotH,rh=(Math.sqrt(x[2])/scaledMax)*plotH;
     return `<rect x="${ax.toFixed(1)}" y="${y(x[1]).toFixed(1)}" width="${barW.toFixed(1)}" height="${ah.toFixed(1)}" rx="2" fill="var(--accent)"><title>Week of ${weeklyAxisLabel(x[0])} · Applied: ${x[1]}</title></rect><rect x="${rx.toFixed(1)}" y="${y(x[2]).toFixed(1)}" width="${barW.toFixed(1)}" height="${rh.toFixed(1)}" rx="2" fill="var(--risk)"><title>Week of ${weeklyAxisLabel(x[0])} · Rejected: ${x[2]}</title></rect>`;
   }).join('');
   const labels=series.map((x,i)=>{
@@ -70,8 +71,8 @@ function lineChart(series){
     return `<text class="axis" x="${cx.toFixed(1)}" y="${H-10}" text-anchor="middle">${weeklyAxisLabel(x[0])}</text>`;
   }).join('');
   const legend=`<g><rect x="${pL}" y="5" width="9" height="9" rx="2" fill="var(--accent)"/><text class="axis" x="${pL+14}" y="13">Applied</text><rect x="${pL+70}" y="5" width="9" height="9" rx="2" fill="var(--risk)"/><text class="axis" x="${pL+84}" y="13">Rejected</text></g>`;
-  return `<svg class="svg-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${legend}${[0,.25,.5,.75,1].map(t=>{const yy=pT+t*plotH;return`<line class="gridline" x1="${pL}" y1="${yy}" x2="${W-pR}" y2="${yy}"/>`}).join('')}${bars}${labels}</svg>`;
+  return `<svg class="svg-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${legend}${[0,.25,.5,.75,1].map(t=>{const yy=H-pB-t*plotH;const value=Math.round(max*t*t);return`<line class="gridline" x1="${pL}" y1="${yy}" x2="${W-pR}" y2="${yy}"/><text class="axis" x="${pL-6}" y="${yy+3}" text-anchor="end">${value}</text>`}).join('')}${bars}${labels}</svg>`;
 }
 
 const overviewWeeklyBase=overview;
-overview=function(){return overviewWeeklyBase().replace('Submissions by week.','Applied and rejected by week.');};
+overview=function(){return overviewWeeklyBase().replace('Submissions by week.','Applied and rejected by week · square-root scale.');};
