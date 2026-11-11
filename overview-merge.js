@@ -156,7 +156,7 @@ function compactStatusBreakdown(){
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;margin-top:auto">
       <div class="legend" style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;max-width:100%;min-width:0">
-      ${entries.map(([k,v],i)=>{const pct=Math.round(v/total*100),color=STATUS_COLORS[k]||['var(--accent)','var(--prepared)','var(--good)','var(--warn)','var(--risk)','var(--ink-3)'][i%6];return `<span title="${esc(k)}" style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><i style="background:${color};border-radius:50%"></i><span>${esc(shortStatus(k))}</span><strong style="color:var(--ink);font:600 .61rem var(--mono)">${pct}%</strong></span>`}).join('')}
+      ${entries.map(([k,v],i)=>{const pct=Math.round(v/total*100),color=STATUS_COLORS[k]||['var(--accent)','var(--prepared)','var(--good)','var(--warn)','var(--risk)','var(--ink-3)'][i%6];return `<span title="${esc(k)}" style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap"><i style="background:${color};border-radius:50%"></i><span>${esc(k==='Applied'?'Live':shortStatus(k))}</span><strong style="color:var(--ink);font:600 .61rem var(--mono)">${pct}%</strong></span>`}).join('')}
       </div>
       ${inProgressApplied>0?`<div title="Subset of Applied, not an additional status" style="display:flex;align-items:center;gap:7px;font:400 .64rem var(--mono);color:var(--ink-2)"><span style="width:13px;height:13px;border-radius:3px;background-color:var(--accent);background-image:radial-gradient(circle,rgba(255,255,255,.9) 1px,transparent 1.2px);background-size:5px 5px"></span>In Progress · ${inProgressApplied} of ${applied} Applied</div>`:''}
     </div>
