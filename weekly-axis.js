@@ -81,7 +81,7 @@ function historicalInProgressSeries(series){
 
 function lineChart(series){
   if(!series.length)return `<div class="empty">No dated applications yet.</div>`;
-  const W=650,H=235,pL=36,pR=12,pT=24,pB=42;
+  const W=650,H=285,pL=36,pR=12,pT=24,pB=34;
   const plotW=W-pL-pR,plotH=H-pT-pB;
   const progress=historicalInProgressSeries(series);
   const max=Math.max(1,...series.flatMap(x=>[x[1],x[2]]),...progress.map(x=>x[1]));
@@ -105,9 +105,9 @@ function lineChart(series){
     return pL+step*((day-first+.5)/7);
   };
   const path=progress.map(([day,count],i)=>`${i?'L':'M'}${progressX(day).toFixed(2)},${y(count).toFixed(2)}`).join(' ');
-  const line=progress.length?`<path d="${path}" fill="none" stroke="var(--good)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>${progress.map(([day,count])=>{const d=new Date(day*86400000),label=`${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`;return `<circle cx="${progressX(day).toFixed(2)}" cy="${y(count).toFixed(2)}" r="5" fill="transparent" stroke="none"><title>${label} · In Progress: ${count}</title></circle>`}).join('')}`:'';
-  const legend=`<g><rect x="${pL}" y="5" width="9" height="9" rx="2" fill="var(--accent)"/><text class="axis" x="${pL+14}" y="13">Applied</text><rect x="${pL+70}" y="5" width="9" height="9" rx="2" fill="var(--risk)"/><text class="axis" x="${pL+84}" y="13">Rejected</text><line x1="${pL+154}" y1="9.5" x2="${pL+173}" y2="9.5" stroke="var(--good)" stroke-width="2.7"/><text class="axis" x="${pL+179}" y="13">In Progress (daily)</text></g>`;
-  return `<svg class="svg-chart" role="img" aria-label="Weekly applied and rejected applications, with daily in-progress applications 20 to 44 days after deadline, using the same square-root axis" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${legend}${[0,.25,.5,.75,1].map(t=>{const yy=H-pB-t*plotH;const value=Math.round(max*t*t);return`<line class="gridline" x1="${pL}" y1="${yy}" x2="${W-pR}" y2="${yy}"/><text class="axis" x="${pL-6}" y="${yy+3}" text-anchor="end">${value}</text>`}).join('')}${bars}${line}${labels}</svg>`;
+  const line=progress.length?`<path d="${path}" fill="none" stroke="#000" stroke-opacity=".15" stroke-width="5" transform="translate(0 1)" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path d="${path}" fill="none" stroke="#111" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>${progress.map(([day,count])=>{const d=new Date(day*86400000),label=`${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`;return `<circle cx="${progressX(day).toFixed(2)}" cy="${y(count).toFixed(2)}" r="5" fill="transparent" stroke="none"><title>${label} · In Progress: ${count}</title></circle>`}).join('')}`:'';
+  const legend=`<g><rect x="${pL}" y="5" width="9" height="9" rx="2" fill="var(--accent)"/><text class="axis" x="${pL+14}" y="13">Applied</text><rect x="${pL+70}" y="5" width="9" height="9" rx="2" fill="var(--risk)"/><text class="axis" x="${pL+84}" y="13">Rejected</text><line x1="${pL+154}" y1="9.5" x2="${pL+173}" y2="9.5" stroke="#111" stroke-width="3.2"/><text class="axis" x="${pL+179}" y="13">In Progress (daily)</text></g>`;
+  return `<svg class="svg-chart" style="height:270px" role="img" aria-label="Weekly applied and rejected applications, with daily in-progress applications 20 to 44 days after deadline, using the same square-root axis" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${legend}${[0,.25,.5,.75,1].map(t=>{const yy=H-pB-t*plotH;const value=Math.round(max*t*t);return`<line class="gridline" x1="${pL}" y1="${yy}" x2="${W-pR}" y2="${yy}"/><text class="axis" x="${pL-6}" y="${yy+3}" text-anchor="end">${value}</text>`}).join('')}${bars}${line}${labels}</svg>`;
 }
 
 const overviewWeeklyBase=overview;
