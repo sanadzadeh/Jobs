@@ -1,0 +1,100 @@
+KHALED SANAD
+Senior Business Insights | Analytics | Data Products & Decision Support
+
+Sydney, NSW | 0412 700 786 | k.sanad@gmail.com | linkedin.com/in/sanad
+sanadzadeh.github.io/Portfolio
+
+PROFESSIONAL SUMMARY
+
+Senior data and analytics professional with seven years at NAB across enterprise transformation, intelligence, financial crime, risk and operational analytics. Experienced in turning complex, fragmented data into clear business insight, reporting products, forecasts and recommendations used by senior stakeholders.
+
+My current work combines SQL, Python, Power BI, DAX, Power Query and Excel with data modelling, validation, automation and stakeholder engagement. I build analytical products, investigate data issues, test assumptions, improve reporting processes and translate technical findings into practical business decisions.
+
+CORE CAPABILITIES
+
+• Business insights and exploratory analysis
+• SQL, Python, Power BI, DAX, Power Query and advanced Excel
+• KPI analysis, forecasting and performance reporting
+• Customer, behavioural and transaction data analysis
+• Data modelling, dimensional modelling and semantic models
+• Data quality, reconciliation, validation and issue resolution
+• Reporting automation and continuous improvement
+• Dashboard and data-product development
+• Stakeholder discovery and requirements translation
+• Executive reporting, storytelling and recommendation development
+• Scenario analysis and forecasting
+• Governance, documentation and source-to-output controls
+• GitHub, version control and AI-assisted analytical development
+• Exposure to SAS-supported analytical environments
+
+PROFESSIONAL EXPERIENCE
+
+National Australia Bank
+
+Senior Consultant – Strategic Planning & Roadmaps, Transformation | 2025–present
+
+• Build analytical products and reporting used by senior stakeholders to understand performance, identify trends and exceptions, test options and support investment and delivery decisions.
+• Integrate portfolio, delivery, cost and stakeholder-maintained data from Clarity, Rally, Excel and other sources into governed analytical models and reporting products.
+• Use SQL, Python, Power Query and Excel to extract, transform, reconcile and validate data before it is used in executive reporting.
+• Develop Power BI dashboards and analytical models that present KPIs, trends, dependencies, exceptions and drivers in a form non-analysts can use.
+• Build scenario and forecasting tools that allow stakeholders to test assumptions and understand how changes in delivery pace, cost, capacity and dependencies affect outcomes.
+• Investigate duplicate keys, unmatched records, incomplete sources, inconsistent definitions and unexpected movements and work with stakeholders to resolve root causes.
+• Replace manual reporting and repetitive analysis with repeatable workflows and browser-based analytical tools.
+• Create documented, maintainable products with business rules, source-to-output logic, assumptions and validation controls.
+• Translate complex analytical outputs into concise narratives, recommendations and executive materials.
+• Use ChatGPT, Claude, Microsoft Copilot and Cursor to accelerate coding, analysis, research and documentation while retaining human review and governance.
+
+Senior Associate – Intelligence | 2023–2025
+
+• Produced more than 100 strategic and operational intelligence assessments using customer, transaction, product, behavioural and external data.
+• Used SQL, Python, Power BI and Excel to interrogate large datasets, test assumptions, identify trends and anomalies and automate recurring analysis.
+• Analysed customer and transaction behaviour across multiple sources to identify material patterns, emerging risks and changes requiring action.
+• Built repeatable dashboards and reporting products that improved consistency, reduced manual effort and made complex insights easier to consume.
+• Combined quantitative analysis, qualitative evidence and stakeholder input into clear recommendations for senior and non-technical audiences.
+• Reconciled conflicting sources and documented assumptions, thresholds, limitations and analytical reasoning.
+• Presented findings to stakeholders and influenced decisions by clearly separating evidence, implications and recommended action.
+
+Senior Associate – Sanctions List Management | 2021–2023
+
+• Analysed screening, reference and customer data to identify matching, data-quality and control issues.
+• Designed and implemented automated analytical processes, including detection of sanctioned cryptocurrency wallets.
+• Translated regulatory requirements into business rules, data requirements and documented controls.
+• Investigated discrepancies across systems and worked with operations and technology teams to resolve them.
+• Validated source and rule changes after implementation and documented residual exceptions.
+
+Associate – Monitoring & Investigations | 2019–2021
+
+• Analysed customer, transaction, alert and risk information from multiple systems to identify unusual activity and material risk indicators.
+• Reconciled complex evidence, assessed patterns and documented the analytical basis for recommendations and escalation.
+• Applied structured judgement, evidence standards and quality controls in a regulated operating environment.
+
+Trainer, Assessor & International Business Development Coordinator
+Vocational Education and Training sector | 2010–2019
+
+• Delivered training, stakeholder engagement and business-development activity across varied audiences.
+• Supported operational, compliance, financial and performance reporting.
+• Developed strong facilitation, presentation and capability-building skills.
+
+TECHNICAL SKILLS
+
+SQL | Python | Power BI | DAX | Power Query | Excel | data modelling | dimensional modelling | star schemas | dashboard development | forecasting | exploratory analysis | data wrangling | validation | reconciliation | automation | GitHub | HTML | CSS | JavaScript | Rally | Clarity | MS Project | Microsoft 365 | ChatGPT | Claude | Microsoft Copilot | Cursor
+
+EDUCATION
+
+Bachelor of Science, Physics and Economics | Tehran, Iran | 2004
+Bachelor of Arts, Technology | University of Adelaide | 2009
+Graduate Diploma in Education | University of Adelaide | 2010
+
+SELECTED PROFESSIONAL DEVELOPMENT
+
+Microsoft Power BI Data Analyst Associate, PL-300 | 2024
+Advanced DAX and SQL for Data Analysis | 2024
+Machine Learning, Stanford University and DeepLearning.AI | 2023
+Generative AI with Large Language Models, DeepLearning.AI | 2023
+Python for Data Science, AI and Development, IBM | 2023
+How to Build and Execute a Successful Data Strategy | 2025
+AI Coding Agents with GitHub Copilot and Cursor | 2026
+
+PORTFOLIO
+
+Please check my portfolio: sanadzadeh.github.io/Portfolio

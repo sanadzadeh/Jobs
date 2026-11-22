@@ -1,0 +1,21 @@
+18 September 2026
+
+Hiring Manager
+SEEK Limited
+
+Dear Hiring Manager,
+
+I am applying for the Senior Data Solutions Designer role because the work closely matches how I operate in my current transformation role: understanding a business problem, structuring the underlying data, defining the rules and controls, and turning that into a reliable solution that people can use.
+
+At NAB, I work across enterprise data from systems including Clarity, Rally and Excel, consolidating fragmented inputs into governed models, Power BI products, scenario tools and executive decision support. A large part of the work is translating stakeholder requirements into data structures, measures and business rules, then validating the result against source data and resolving anomalies before it is used for decisions.
+
+I have hands-on experience with SQL, Python, Power BI, DAX, Power Query, dimensional modelling, data-quality controls and documentation. I also work closely with business and technology stakeholders to clarify requirements, test interpretations, review solution designs and improve reporting and governance processes.
+
+My intelligence experience adds another layer that is relevant to this role. I routinely worked with complex customer, transaction and entity datasets, investigated data inconsistencies, combined multiple sources, tested hypotheses and produced analytical outputs that needed to be traceable and defensible.
+
+The Senior Data Solutions Designer role appeals to me because it combines business-facing problem solving, data modelling, solution design, data quality and collaboration with engineers and analysts. That is the direction I want to continue developing in.
+
+Please check my portfolio: sanadzadeh.github.io/Portfolio
+
+Kind regards,
+Khaled Sanad

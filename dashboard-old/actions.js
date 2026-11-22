@@ -1,0 +1,165 @@
+if(!VIEWS.some(v=>v[0]==='documents')){
+  const qualityIndex=VIEWS.findIndex(v=>v[0]==='quality');
+  VIEWS.splice(qualityIndex<0?VIEWS.length:qualityIndex,0,['documents','CV & cover letters']);
+}
+if(!VIEWS.some(v=>v[0]==='offline')){
+  const qualityIndex=VIEWS.findIndex(v=>v[0]==='quality');
+  VIEWS.splice(qualityIndex<0?VIEWS.length:qualityIndex,0,['offline','Offline']);
+}
+if(!Array.isArray(state.offlineRows))state.offlineRows=[];
+if(!VIEWS.some(v=>v[0]==='masterCVs')){
+ const i=VIEWS.findIndex(v=>v[0]==='quality');
+ VIEWS.splice(i<0?VIEWS.length:i,0,['masterCVs','Master CVs']);
+}
+if(!Array.isArray(state.masterCVRows))state.masterCVRows=[];
+
+let cleanDocuments=[];
+if(typeof state.docPreparedOnly!=='boolean')state.docPreparedOnly=true;
+const normDoc=s=>String(s??'').trim().toLowerCase().replace(/\s+/g,' ');
+function docMatch(r,d){
+  const rJob=normDoc(r['Job ID']),dJob=normDoc(d.jobId);
+  if(rJob&&dJob&&rJob===dJob)return true;
+  return normDoc(r.Company)===normDoc(d.company)&&normDoc(d.role)===normDoc(r.Role);
+}
+async function loadCleanDocuments(){
+  const b64=window.JOB_DOCUMENTS_GZIP_B64||'';
+  if(!b64){cleanDocuments=[];return}
+  try{
+    const bin=atob(b64),bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const text=await new Response(stream).text();
+    cleanDocuments=JSON.parse(text);
+  }catch(err){
+    console.error('Could not load bundled CV and cover-letter text',err);
+    cleanDocuments=[];
+  }
+}
+function hydrateDocumentText(rows=state.rows){
+  rows.forEach(r=>{
+    const d=cleanDocuments.find(x=>docMatch(r,x));
+    if(!d)return;
+    r['CV text']=String(d.cv||'');
+    r['Cover letter text']=String(d.cover||'');
+  });
+}
+function documentRows(){return state.rows.filter(r=>String(r['CV text']||'').trim()||String(r['Cover letter text']||'').trim()).slice().sort((a,b)=>String(a.Company||'').localeCompare(String(b.Company||''),undefined,{sensitivity:'base'})||String(a.Role||'').localeCompare(String(b.Role||''),undefined,{sensitivity:'base'}))}
+function filteredDocumentRows(){return documentRows().filter(r=>!state.docPreparedOnly||r.Status==='Prepared')}
+function wordCount(s){const x=String(s||'').trim();return x?x.split(/\s+/).length:0}
+function currentDocumentRow(){const rows=filteredDocumentRows();if(!rows.length)return null;let r=rows.find(x=>x._row===state.docRow);if(!r){r=rows[0];state.docRow=r._row}return r}
+
+function applicationActions(r){
+  const out=[];
+  if(String(r['CV text']||'').trim())out.push(['Copy CV','CV text','copy']);
+  if(String(r['Cover letter text']||'').trim())out.push(['Copy cover','Cover letter text','copy']);
+  const links=[['Dashboard','Dashboard'],['Apply link','Apply'],['Confirmation email','Confirmation'],['Latest email','Latest email']];
+  links.forEach(([field,label])=>{const u=linkFor(r,field);if(u)out.push([label,u,'link'])});
+  return out;
+}
+function actionMarkup(r,limit){
+  const items=applicationActions(r);
+  return (limit?items.slice(0,limit):items).map(([label,value,type])=>type==='copy'
+    ?`<button type="button" class="mini-link copy-link" data-copy-row="${r._row}" data-copy-field="${esc(value)}">${esc(label)}</button>`
+    :`<a class="mini-link" href="${esc(value)}" target="_blank" rel="noopener">${esc(label)}</a>`).join('');
+}
+function copySourceText(rowNo,field){
+  const r=state.rows.find(x=>x._row===rowNo);if(!r)return '';
+  if(state.view==='documents'&&state.docRow===rowNo){
+    if(field==='CV text'){const el=document.getElementById('cvEditor');if(el)return el.value}
+    if(field==='Cover letter text'){const el=document.getElementById('clEditor');if(el)return el.value}
+  }
+  return String(r[field]||'');
+}
+function legacyCopy(text){
+  const active=document.activeElement,t=document.createElement('textarea');
+  t.value=text;t.setAttribute('readonly','');t.setAttribute('aria-hidden','true');
+  t.style.position='fixed';t.style.left='-9999px';t.style.top='0';t.style.opacity='0';
+  document.body.appendChild(t);t.focus();t.select();t.setSelectionRange(0,t.value.length);
+  let ok=false;try{ok=document.execCommand('copy')}catch(err){ok=false}t.remove();
+  if(active&&typeof active.focus==='function')active.focus({preventScroll:true});return ok;
+}
+async function copyAction(text){
+  const value=String(text??'');if(!value){toast('Nothing to copy');return false}
+  let ok=false;
+  if(navigator.clipboard&&window.isSecureContext){try{await navigator.clipboard.writeText(value);ok=true}catch(err){ok=false}}
+  if(!ok)ok=legacyCopy(value);
+  toast(ok?'Copied to clipboard':'Could not copy to clipboard');
+  return ok;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-copy-row][data-copy-field]');if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  copyAction(copySourceText(+b.dataset.copyRow,b.dataset.copyField));
+});
+
+function cachePayload(){
+  const rows=state.rows.map(r=>{const x={...r};delete x['CV text'];delete x['Cover letter text'];return x});
+  return {rows,offlineRows:state.offlineRows||[],source:state.source,sheet:state.sheet,loadedAt:state.loadedAt?new Date(state.loadedAt).toISOString():null};
+}
+function persistCache(){try{localStorage.setItem('jobDashRegisterCache',JSON.stringify(cachePayload()))}catch(err){console.warn('Could not cache register',err)}}
+function restoreCache(){
+  try{
+    const raw=localStorage.getItem('jobDashRegisterCache');if(!raw)return false;
+    const d=JSON.parse(raw);if(!Array.isArray(d.rows)||!d.rows.length)return false;
+    state.rows=d.rows;state.offlineRows=Array.isArray(d.offlineRows)?d.offlineRows:[];hydrateDocumentText(state.rows);
+    state.source=d.source||'Cached register';state.sheet=d.sheet||CONFIG.sheetName;state.loadedAt=d.loadedAt?new Date(d.loadedAt):new Date();
+    showDashboard();render();return true;
+  }catch(err){console.warn('Could not restore cached register',err);return false}
+}
+const parseWorkbookBase=parseWorkbook;
+parseWorkbook=function(buf,sourceLabel){
+  parseWorkbookBase(buf,sourceLabel);
+  state.offlineRows=typeof parseOfflineSheet==='function'?parseOfflineSheet(buf):[];
+  state.masterCVRows=typeof parseMasterCVSheet==='function'?parseMasterCVSheet(buf):[];
+  hydrateDocumentText(state.rows);
+  persistCache();
+  render();
+};
+
+openDrawer=function(rowNo){
+  const r=state.rows.find(x=>x._row===rowNo);if(!r)return;
+  const notes=String(r.Notes||'');
+  const salaryMatch=notes.match(/\b(?:salary(?:\s*\/\s*daily\s+rate)?\s+requested|requested\s+salary|rate\s+requested)\s*:\s*([^\n.;]+)/i);
+  const requestedSalary=salaryMatch?salaryMatch[1].trim():'Not recorded';
+  const advertisedMatch=notes.match(/\b(?:advertised\s+(?:salary|rate|remuneration)|salary\s+range|advertised\s+pay)\s*:\s*([^\n.;]+)/i);
+  document.getElementById('drawerTitle').textContent=r.Role||'Application';
+  document.getElementById('drawerSub').textContent=[r.Company,r['Job ID']].filter(Boolean).join(' · ');
+  const detail=[['Requested salary',esc(requestedSalary)],...(advertisedMatch?[['Advertised pay',esc(advertisedMatch[1].trim())]]:[]),['Job reference',esc(r['Job ID']||'—')],['Status',r.Status==='Rejected'&&r['Manual status']!=='Rejected'?`${statusBadge(r.Status)} <span title="Automatically classified 45 days after the deadline without an employer outcome">(automatic, unconfirmed)</span>`:statusBadge(r.Status)],['Applied',esc(fmtDate(r['Applied date'])||'—')],['Deadline',esc(fmtDate(r.Deadline)||'—')],['Last update',esc(fmtDate(r['Last update'])||r['Last update']||'—')],['Response time',esc((()=>{const t=responseTiming(r);if(!t)return '—';return t.kind==='pending'?(t.days>=0?`${t.days} days waiting`:`${Math.abs(t.days)} days until deadline`):`${t.days} days (45-day maximum)`})())],['Contact',esc(r.Contact||'—')],['Email',r['Contact email']?`<a href="mailto:${esc(r['Contact email'])}">${esc(r['Contact email'])}</a>`:'—']];
+  document.getElementById('drawerBody').innerHTML=`<div class="detail-grid">${detail.map(([l,v])=>`<div class="detail"><label>${l}</label><div>${v}</div></div>`).join('')}</div><div class="drawer-links">${actionMarkup(r)}</div><div class="eyebrow">Notes</div><div class="notes">${esc(r.Notes||'No notes recorded.')}</div>`;
+  document.getElementById('drawer').classList.add('open');document.getElementById('drawerBackdrop').classList.add('open');
+};
+appTable=function(){
+  const rows=filteredRows();
+  const response=averageResponseTime();
+  const avg=response.average===null?'—':response.average.toFixed(1)+' days';
+  return `<div class="response-summary card"><span class="eyebrow">Average response time</span><strong>${avg}</strong><span class="kpi-sub">${response.count} rejected records with deadlines, including automatic closures</span></div>${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Deadline</th><th>Response time</th><th>Days since deadline</th><th>Contact</th><th>Actions</th><th></th></tr></thead><tbody>${rows.map(r=>{
+    const t=responseTiming(r);
+    const label=t?t.kind==='pending'?(t.days>=0?`${t.days}d waiting`:`${Math.abs(t.days)}d until deadline`):`${t.days}d`:'—';
+    const elapsed=['Applied','Under review','Interview completed','No outcome found','CV acknowledged','Talent pool / EOI'].includes(r.Status)?daysSinceDeadline(r):null;
+    const progress=isInProgress(r);
+    const days=elapsed===null?'—':String(elapsed);
+    const status=progress&&r.Status==='Applied'?`<span class="badge b-good">${esc(r.Status)}</span>`:r.Status==='Rejected'&&r['Manual status']!=='Rejected'?`${statusBadge(r.Status)}<span title="Automatically classified 45 days after the deadline without a confirmed employer outcome" style="display:block;font-size:.62rem;margin-top:4px">Automatic</span>`:statusBadge(r.Status);
+    return `<tr class="${progress?'in-progress-app-row':''}" data-open="${r._row}"><td>${status}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(label)}</td><td class="${progress?'in-progress-days':''}">${esc(days)}</td><td>${esc(r.Contact||'')}</td><td><div class="linkrow" onclick="event.stopPropagation()">${actionMarkup(r,6)}</div></td><td class="row-chevron">›</td></tr>`;
+  }).join('')}</tbody></table>${rows.length?'':'<div class="empty">No applications match these filters.</div>'}</div><div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. In Progress is more than 20 days after deadline with an active status.</div>`;
+};
+function documents(){
+  const rows=filteredDocumentRows(),r=currentDocumentRow();
+  if(!r)return `${pageHead('CV & cover letters','Review and edit the clean document text loaded with the tracker.')}<div class="doc-toolbar"><label class="doc-check"><input type="checkbox" id="docPreparedOnly" ${state.docPreparedOnly?'checked':''}> Prepared only</label></div><div class="card"><div class="empty">${state.docPreparedOnly?'No Prepared applications have CV or cover-letter text. Untick Prepared only to see all applications.':'No CV or cover-letter text is available for the loaded applications.'}</div></div>`;
+  const cv=String(r['CV text']||''),cl=String(r['Cover letter text']||'');
+  return `${pageHead('CV & cover letters','Review, copy and temporarily edit the full text. Refresh restores the clean source version.')}<div class="doc-toolbar"><label class="doc-check"><input type="checkbox" id="docPreparedOnly" ${state.docPreparedOnly?'checked':''}> Prepared only</label><select class="select doc-select" id="docSelect">${rows.map(x=>`<option value="${x._row}" ${x._row===r._row?'selected':''}>${esc(x.Company)} · ${esc(x.Role)}</option>`).join('')}</select><span class="badge b-neutral">${rows.length} applications with documents</span></div><div class="notice doc-note">Edits are temporary. Refreshing the page restores the clean CV and cover-letter text loaded from the source bundle.</div><section class="doc-grid"><article class="card doc-card"><div class="section-title"><div><h3>CV</h3><p><span id="cvWords">${wordCount(cv)}</span> words · <span id="cvChars">${cv.length}</span> characters</p></div><button type="button" class="mini-link copy-link" data-copy-row="${r._row}" data-copy-field="CV text">Copy CV</button></div><textarea class="doc-editor" id="cvEditor" spellcheck="true">${esc(cv)}</textarea></article><article class="card doc-card"><div class="section-title"><div><h3>Cover letter</h3><p><span id="clWords">${wordCount(cl)}</span> words · <span id="clChars">${cl.length}</span> characters</p></div><button type="button" class="mini-link copy-link" data-copy-row="${r._row}" data-copy-field="Cover letter text">Copy cover</button></div><textarea class="doc-editor" id="clEditor" spellcheck="true">${esc(cl)}</textarea></article></section>`;
+}
+const attachViewEventsBase=attachViewEvents;
+attachViewEvents=function(){
+  attachViewEventsBase();
+  const keepSearchFocus=(id)=>{const el=document.getElementById(id);if(!el)return;el.oninput=e=>{const value=e.target.value,pos=e.target.selectionStart??value.length;state.filter=value;render();requestAnimationFrame(()=>{const next=document.getElementById(id);if(next){next.focus({preventScroll:true});next.setSelectionRange(Math.min(pos,next.value.length),Math.min(pos,next.value.length))}})}};
+  keepSearchFocus('pipeSearch');
+  keepSearchFocus('appSearch');
+  const prepared=document.getElementById('docPreparedOnly');if(prepared)prepared.onchange=e=>{state.docPreparedOnly=e.target.checked;state.docRow=null;render()};
+  const ds=document.getElementById('docSelect');if(ds)ds.onchange=e=>{state.docRow=+e.target.value;render()};
+  const cv=document.getElementById('cvEditor');if(cv)cv.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['CV text']=e.target.value;document.getElementById('cvWords').textContent=wordCount(e.target.value);document.getElementById('cvChars').textContent=e.target.value.length};
+  const cl=document.getElementById('clEditor');if(cl)cl.oninput=e=>{const r=currentDocumentRow();if(!r)return;r['Cover letter text']=e.target.value;document.getElementById('clWords').textContent=wordCount(e.target.value);document.getElementById('clChars').textContent=e.target.value.length};
+};
+renderSidebar=function(){const c=counts(),viewCounts={overview:'',pipeline:c.prepared+c.active,applications:c.total,deadlines:state.rows.filter(r=>r.Status==='Prepared').length,analytics:'',documents:filteredDocumentRows().length,offline:(state.offlineRows||[]).length,masterCVs:(state.masterCVRows||[]).length,quality:''};document.getElementById('sidebar').innerHTML=`<div class="side-title">Views</div>${VIEWS.map((v,i)=>`<button class="nav ${state.view===v[0]?'active':''}" data-view="${v[0]}"><span class="nav-num">${String(i+1).padStart(2,'0')}</span><span class="nav-label">${v[1]}</span>${viewCounts[v[0]]!==''?`<span class="nav-count">${viewCounts[v[0]]}</span>`:''}</button>`).join('')}<a class="nav sidebar-link" href="https://docs.google.com/spreadsheets/d/1o4yIRbZKUEkE8NJgxjBoOZ2_zHHYrgjNROxOXjzpB-E/edit" target="_blank" rel="noopener"><span class="nav-num">↗</span><span class="nav-label">Google Sheet</span></a><div class="side-meta">${sourceInfo()}</div>`;document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;localStorage.setItem('jobDashView',state.view);render()})};
+render=function(){if(!state.rows.length)return;renderSidebar();const views={overview,pipeline,applications,deadlines,analytics,documents,offline,masterCVs,quality};document.getElementById('main').innerHTML=(views[state.view]||overview)();attachViewEvents()};
+
+loadCleanDocuments().then(()=>restoreCache());
