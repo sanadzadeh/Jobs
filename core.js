@@ -44,8 +44,14 @@ function responseTiming(r){
     return {days:bounded(calendarDaysBetween(deadline,new Date())),kind,source:'fallback'};
   return null;
 }
+// The calculated Status can become Rejected automatically 45 days after the deadline.
+// Count only confirmed, manually recorded rejections in the response-time average.
 function averageResponseTime(){
-  const durations=state.rows.filter(r=>r.Status==='Rejected').map(responseTiming).filter(x=>x&&Number.isFinite(x.days)).map(x=>x.days);
+  const durations=state.rows
+    .filter(r=>r.Status==='Rejected'&&String(r['Manual status']||'').trim()==='Rejected')
+    .map(responseTiming)
+    .filter(x=>x&&Number.isFinite(x.days))
+    .map(x=>x.days);
   return {count:durations.length,average:durations.length?durations.reduce((a,b)=>a+b,0)/durations.length:null};
 }
 
