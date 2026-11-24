@@ -132,7 +132,7 @@ appTable=function(){
   const rows=filteredRows();
   const response=averageResponseTime();
   const avg=response.average===null?'—':response.average.toFixed(1)+' days';
-  return `<div class="response-summary card"><span class="eyebrow">Average response time</span><strong>${avg}</strong><span class="kpi-sub">${response.count} rejected records with deadlines, including automatic closures</span></div>${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Deadline</th><th>Response time</th><th>Days since deadline</th><th>Contact</th><th>Actions</th><th></th></tr></thead><tbody>${rows.map(r=>{
+  return `<div class="response-summary card"><span class="eyebrow">Average response time</span><strong>${avg}</strong><span class="kpi-sub">${response.count} confirmed rejections with deadlines; automatic 45-day rejections excluded</span></div>${toolbar()}<div class="table-wrap"><table><thead><tr><th>Status</th><th>Company</th><th>Role</th><th>Applied</th><th>Deadline</th><th>Response time</th><th>Days since deadline</th><th>Contact</th><th>Actions</th><th></th></tr></thead><tbody>${rows.map(r=>{
     const t=responseTiming(r);
     const label=t?t.kind==='pending'?(t.days>=0?`${t.days}d waiting`:`${Math.abs(t.days)}d until deadline`):`${t.days}d`:'—';
     const elapsed=['Applied','Under review','Interview completed','No outcome found','CV acknowledged','Talent pool / EOI'].includes(r.Status)?daysSinceDeadline(r):null;
@@ -140,7 +140,7 @@ appTable=function(){
     const days=elapsed===null?'—':String(elapsed);
     const status=progress&&r.Status==='Applied'?`<span class="badge b-good">${esc(r.Status)}</span>`:r.Status==='Rejected'&&r['Manual status']!=='Rejected'?`${statusBadge(r.Status)}<span title="Automatically classified 45 days after the deadline without a confirmed employer outcome" style="display:block;font-size:.62rem;margin-top:4px">Automatic</span>`:statusBadge(r.Status);
     return `<tr class="${progress?'in-progress-app-row':''}" data-open="${r._row}"><td>${status}</td><td class="company">${esc(r.Company)}</td><td class="role">${esc(r.Role)}</td><td>${esc(fmtDate(r['Applied date']))}</td><td>${esc(fmtDate(r.Deadline))}</td><td>${esc(label)}</td><td class="${progress?'in-progress-days':''}">${esc(days)}</td><td>${esc(r.Contact||'')}</td><td><div class="linkrow" onclick="event.stopPropagation()">${actionMarkup(r,6)}</div></td><td class="row-chevron">›</td></tr>`;
-  }).join('')}</tbody></table>${rows.length?'':'<div class="empty">No applications match these filters.</div>'}</div><div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. In Progress is more than 20 days after deadline with an active status.</div>`;
+  }).join('')}</tbody></table>${rows.length?'':'<div class="empty">No applications match these filters.</div>'}</div><div class="footer-note">Showing ${rows.length} of ${state.rows.length} records. In Progress covers days 7–30 after deadline, inclusive, for active applications.</div>`;
 };
 function documents(){
   const rows=filteredDocumentRows(),r=currentDocumentRow();
