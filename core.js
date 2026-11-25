@@ -1,4 +1,6 @@
 const CONFIG={sheetName:'Applications'};
+const AUTO_REJECT_AFTER=30;
+const AUTO_REJECT_DAY=AUTO_REJECT_AFTER+1;
 const CLOSED=new Set(['Rejected','Role withdrawn','Recruitment cancelled','Ad closed']);
 const ACTIVE=new Set(['Applied','Under review','Interview completed','No outcome found','CV acknowledged','Talent pool / EOI']);
 const VIEWS=[['overview','Overview'],['pipeline','Pipeline'],['applications','Applications'],['deadlines','Deadlines'],['quality','Data quality']];
@@ -10,7 +12,7 @@ function dateFrom(v){if(!v)return null;if(v instanceof Date&&!isNaN(v))return ne
 function fmtDate(v){const d=dateFrom(v);return d?d.toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'}):''}
 function daysUntil(v){const d=dateFrom(v);if(!d)return null;const a=new Date();a.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.ceil((d-a)/86400000)}
 
-// Mirror column T of the Google Sheets register: 45-day cap.
+// Mirror column T: automatic rejection on day 31; confirmed response timing retains its existing 45-day cap.
 // Rejections before the deadline use application-to-response days;
 // later rejections use deadline-to-response days.
 function calendarDaysBetween(start,end){
@@ -20,7 +22,7 @@ function calendarDaysBetween(start,end){
   return Math.round(day(b)-day(a));
 }
 // Column T is authoritative when the exported workbook includes its calculated value.
-// A blank or non-numeric cell falls back to the equivalent 45-day rule.
+// A blank or non-numeric cell falls back to the register's timing rules.
 function responseTiming(r){
   if(!r.Company||r.Status==='Prepared')return null;
   const deadline=dateFrom(r.Deadline);
@@ -33,18 +35,18 @@ function responseTiming(r){
   }
   const bounded=n=>Math.min(45,Math.max(0,n));
   if(kind==='rejected'){
-    if(r['Manual status']!=='Rejected')return {days:45,kind,source:'fallback'};
+    if(r['Manual status']!=='Rejected')return {days:AUTO_REJECT_DAY,kind,source:'fallback'};
     const outcome=dateFrom(r['Manual last update']);
-    if(!outcome)return {days:45,kind,source:'fallback'};
+    if(!outcome)return {days:AUTO_REJECT_DAY,kind,source:'fallback'};
     const applied=dateFrom(r['Applied date']);
     const start=applied&&outcome<deadline?applied:deadline;
     return {days:bounded(calendarDaysBetween(start,outcome)),kind,source:'fallback'};
   }
   if(dateFrom(r['Applied date']))
-    return {days:bounded(calendarDaysBetween(deadline,new Date())),kind,source:'fallback'};
+    return {days:Math.min(AUTO_REJECT_DAY,Math.max(0,calendarDaysBetween(deadline,new Date()))),kind,source:'fallback'};
   return null;
 }
-// The calculated Status can become Rejected automatically 45 days after the deadline.
+// Automatic rejection begins on day 31 after the deadline.
 // Count only confirmed, manually recorded rejections in the response-time average.
 function averageResponseTime(){
   const durations=state.rows
@@ -69,6 +71,27 @@ function effectiveDeadline(r){return r.Status==='Prepared'?r.Deadline:(r['Applie
 function preparedDeadlineSort(a,b){const da=dateFrom(a.Deadline),db=dateFrom(b.Deadline);if(!da&&!db)return String(a.Company||'').localeCompare(String(b.Company||''));if(!da)return-1;if(!db)return 1;return da-db||String(a.Company||'').localeCompare(String(b.Company||''))}
 function deadlineSort(a,b){const aPrepared=a.Status==='Prepared',bPrepared=b.Status==='Prepared';const aPreparedBlank=aPrepared&&!dateFrom(a.Deadline),bPreparedBlank=bPrepared&&!dateFrom(b.Deadline);if(aPreparedBlank!==bPreparedBlank)return aPreparedBlank?-1:1;if(aPrepared!==bPrepared)return aPrepared?-1:1;const da=dateFrom(effectiveDeadline(a)),db=dateFrom(effectiveDeadline(b));if(!da&&!db)return String(a.Company||'').localeCompare(String(b.Company||''));if(!da)return 1;if(!db)return-1;return aPrepared?(da-db||String(a.Company||'').localeCompare(String(b.Company||''))):(db-da||String(a.Company||'').localeCompare(String(b.Company||'')))}
 
+// Recalculate automatic outcomes on import, including workbooks exported under the former rule.
+function refreshAutomaticStatus(row,now=new Date()){
+  if(String(row['Manual status']||'').trim()!=='Applied')return row;
+  const deadline=dateFrom(row.Deadline);
+  if(!deadline)return row;
+  const elapsed=calendarDaysBetween(deadline,now);
+  if(elapsed>AUTO_REJECT_AFTER){
+    const outcome=new Date(deadline);
+    outcome.setDate(outcome.getDate()+AUTO_REJECT_DAY);
+    row.Status='Rejected';
+    row['Last update']=fmtDate(outcome);
+    row['Response time (days)']=AUTO_REJECT_DAY;
+    row['Days since deadline']='';
+  }else{
+    row.Status='Applied';
+    row['Last update']=row['Manual last update']||row['Last update'];
+    row['Response time (days)']=Math.max(0,elapsed);
+    row['Days since deadline']=elapsed;
+  }
+  return row;
+}
 function parseWorkbook(buf,sourceLabel){
   const wb=XLSX.read(buf,{type:'array',cellDates:true,cellNF:true,cellText:true});
   const name=wb.SheetNames.includes(CONFIG.sheetName)?CONFIG.sheetName:wb.SheetNames[0];
@@ -96,7 +119,7 @@ function parseWorkbook(buf,sourceLabel){
       if(url)row._links[h]=url;
     });
     if(!String(row.Company||'').trim()&&!String(row.Role||'').trim())continue;
-    rows.push(row);
+    rows.push(refreshAutomaticStatus(row));
   }
   if(!rows.length)throw new Error('The register was found, but it contains no application rows.');
   state.rows=rows;state.source=sourceLabel;state.sheet=name;state.loadedAt=new Date();
